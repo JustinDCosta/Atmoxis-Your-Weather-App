@@ -59,7 +59,7 @@ export function CurrentWeatherCard({
           <button
             type="button"
             onClick={onToggleSave}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/14 bg-white/8 px-3 text-xs font-semibold text-ink transition hover:bg-white/14 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line/40 bg-card-elevated/55 px-3 text-xs font-semibold text-ink transition hover:bg-card-elevated/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
             aria-pressed={isSaved}
           >
             <Star
@@ -82,7 +82,7 @@ export function CurrentWeatherCard({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/12 bg-white/7 px-4 py-3 text-right">
+        <div className="rounded-2xl border border-line/40 bg-card-elevated/55 px-4 py-3 text-right">
           <p className="text-xs uppercase tracking-[0.18em] text-ink-muted">Today</p>
           <p className="mt-1 text-lg font-semibold text-ink">
             H {formatTemperature(current.high)} / L {formatTemperature(current.low)}
@@ -94,7 +94,7 @@ export function CurrentWeatherCard({
         {metrics.map((metric) => (
           <article
             key={metric.label}
-            className="rounded-xl border border-white/10 bg-white/6 px-3 py-2.5"
+            className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
           >
             <p className="text-[0.73rem] uppercase tracking-[0.14em] text-ink-muted">
               {metric.label}

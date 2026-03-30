@@ -23,6 +23,7 @@ import { HourlyForecast } from "@/components/weather/hourly-forecast";
 import { SearchInput } from "@/components/weather/search-input";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useWeatherPreferences } from "@/store/use-weather-preferences";
 
 type GeolocationState = "idle" | "active" | "granted" | "denied" | "unavailable";
@@ -259,25 +260,30 @@ export function WeatherDashboard() {
   }, [query, selectLocation, suggestions]);
 
   return (
-    <div className="relative min-h-screen px-4 py-5 md:px-8 md:py-8">
+    <div className="relative min-h-screen overflow-x-clip px-4 py-5 md:px-8 md:py-8">
       <AtmosphericBackdrop
         theme={report?.current.theme ?? "cloudy"}
         isDay={report?.current.isDay ?? true}
       />
 
-      <div className="relative mx-auto flex w-full max-w-[1040px] flex-col gap-4 md:gap-5">
+      <div className="relative mx-auto flex w-full max-w-[1040px] min-w-0 flex-col gap-4 md:gap-5">
         <header className="glass rounded-[var(--radius-xl)] p-4 md:p-5">
           <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm uppercase tracking-[0.2em] text-ink-muted">Atmoxis</p>
               <h1 className="display-type mt-1 text-2xl font-semibold text-ink md:text-3xl">
                 Minimal weather, instantly readable
               </h1>
             </div>
-            <p className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
-              <MapPin size={14} />
-              {report ? formatLocation(report.location) : "Detecting location"}
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="inline-flex min-w-0 max-w-[60vw] items-center gap-1.5 truncate text-sm text-ink-muted md:max-w-[320px]">
+                <MapPin size={14} className="shrink-0" />
+                <span className="truncate">
+                  {report ? formatLocation(report.location) : "Detecting location"}
+                </span>
+              </p>
+              <ThemeToggle />
+            </div>
           </div>
 
           <SearchInput
@@ -307,11 +313,11 @@ export function WeatherDashboard() {
         {error ? (
           <GlassPanel
             as="section"
-            className="border-red-300/35 bg-red-900/22"
+            className="border-red-400/40 bg-red-500/15"
             role="alert"
             aria-live="polite"
           >
-            <p className="flex items-start gap-2 text-sm text-red-100">
+            <p className="flex items-start gap-2 text-sm text-red-200">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </p>
@@ -337,16 +343,16 @@ export function WeatherDashboard() {
                     subtitle="Quick plain-language summary"
                   />
                   <ul className="mt-3 space-y-2 text-sm text-ink-muted">
-                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
                       {buildFeelsLikeSummary(report)}
                     </li>
-                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
                       {buildWindSummary(report)}
                     </li>
-                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
                       {buildRainSummary(report)}
                     </li>
-                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
                       {buildDaylightSummary(report)}
                     </li>
                   </ul>
@@ -367,7 +373,7 @@ export function WeatherDashboard() {
                   key={location.id}
                   type="button"
                   onClick={() => void selectLocation(location)}
-                  className="rounded-full border border-white/14 bg-white/8 px-3 py-1.5 text-sm text-ink transition hover:bg-white/15"
+                  className="rounded-full border border-line/40 bg-card-elevated/55 px-3 py-1.5 text-sm text-ink transition hover:bg-card-elevated/75"
                 >
                   {location.name}
                 </button>

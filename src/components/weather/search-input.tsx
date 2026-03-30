@@ -49,12 +49,12 @@ export function SearchInput({
 
   return (
     <div
-      className="relative flex w-full max-w-[620px] flex-col gap-2"
+      className="relative flex w-full max-w-[620px] min-w-0 flex-col gap-2"
       onFocus={() => setIsFocused(true)}
       onBlur={handleContainerBlur}
     >
-      <div className="glass flex h-12 items-center gap-2 rounded-full px-3.5">
-        <Search size={16} className="text-ink-muted" />
+      <div className="glass flex min-h-12 items-center gap-2 rounded-2xl px-2.5 py-2 sm:h-12 sm:flex-nowrap sm:rounded-full sm:px-3.5 sm:py-0">
+        <Search size={16} className="shrink-0 text-ink-muted" />
         <input
           value={value}
           onChange={(event) => onValueChange(event.target.value)}
@@ -66,27 +66,27 @@ export function SearchInput({
           }}
           placeholder="Search by city"
           aria-label="Search city"
-          className="h-full flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted/80 md:text-[0.95rem]"
+          className="h-8 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted/80 md:text-[0.95rem]"
         />
         <button
           type="button"
           onClick={onSubmit}
-          className="inline-flex h-8 items-center justify-center rounded-full border border-cyan-200/26 bg-cyan-200/14 px-3 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-200/24 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/45 bg-card-elevated/70 px-3 text-xs font-semibold text-ink transition hover:bg-card-elevated/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
         >
           Search
         </button>
         <button
           type="button"
           onClick={onUseLocation}
-          className="inline-flex h-8 items-center justify-center rounded-full border border-white/14 bg-white/8 px-3 text-xs font-semibold text-ink transition hover:bg-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/40 bg-card-elevated/60 px-2.5 text-xs font-semibold text-ink transition hover:bg-card-elevated/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:px-3"
         >
-          <LocateFixed size={14} className="mr-1" />
-          Locate me
+          <LocateFixed size={14} className="sm:mr-1" />
+          <span className="hidden sm:inline">Locate me</span>
         </button>
       </div>
 
       {showDropdown ? (
-        <div className="glass absolute top-[calc(100%+0.3rem)] z-20 w-full rounded-3xl p-2.5">
+        <div className="glass absolute inset-x-0 top-[calc(100%+0.3rem)] z-20 w-auto rounded-2xl p-2.5 sm:rounded-3xl">
           {showRecent ? (
             <div>
               <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
@@ -99,9 +99,9 @@ export function SearchInput({
                       type="button"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => onSelectRecent(location)}
-                      className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-ink transition hover:bg-white/10"
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/70"
                     >
-                      <span>{locationLabel(location)}</span>
+                      <span className="truncate pr-2">{locationLabel(location)}</span>
                       <Clock3 size={14} className="text-ink-muted" />
                     </button>
                   </li>
@@ -128,9 +128,9 @@ export function SearchInput({
                         type="button"
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => onSelectSuggestion(location)}
-                        className="w-full rounded-2xl px-3 py-2 text-left text-sm text-ink transition hover:bg-white/10"
+                        className="w-full rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/70"
                       >
-                        {locationLabel(location)}
+                        <span className="block truncate">{locationLabel(location)}</span>
                       </button>
                     </li>
                   ))}

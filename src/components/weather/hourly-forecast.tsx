@@ -94,7 +94,7 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
         {hourly.slice(0, 12).map((entry) => (
           <article
             key={entry.time}
-            className="min-w-[96px] rounded-xl border border-white/12 bg-white/6 px-2.5 py-2.5"
+            className="min-w-[96px] rounded-xl border border-line/35 bg-card-elevated/55 px-2.5 py-2.5"
           >
             <p className="text-xs text-ink-muted">{formatHourLabel(entry.time, timezone)}</p>
             <p className="mt-2 text-sm font-semibold text-ink">

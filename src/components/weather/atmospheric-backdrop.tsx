@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import type { WeatherTheme } from "@/lib/weather";
 
 type AtmosphericBackdropProps = {
@@ -92,8 +94,117 @@ const NIGHT_THEMES: Record<WeatherTheme, Palette> = {
   },
 };
 
+const LIGHT_DAY_THEMES: Record<WeatherTheme, Palette> = {
+  clear: {
+    primary: "rgb(157 215 255 / 0.42)",
+    secondary: "rgb(196 230 255 / 0.28)",
+    accent: "rgb(255 214 150 / 0.22)",
+    bottom: "rgb(224 238 251)",
+  },
+  cloudy: {
+    primary: "rgb(171 203 228 / 0.36)",
+    secondary: "rgb(201 221 240 / 0.24)",
+    accent: "rgb(227 238 248 / 0.22)",
+    bottom: "rgb(228 239 251)",
+  },
+  rain: {
+    primary: "rgb(137 183 219 / 0.38)",
+    secondary: "rgb(165 200 226 / 0.28)",
+    accent: "rgb(180 215 238 / 0.2)",
+    bottom: "rgb(220 234 247)",
+  },
+  storm: {
+    primary: "rgb(131 166 200 / 0.4)",
+    secondary: "rgb(160 186 220 / 0.3)",
+    accent: "rgb(193 212 239 / 0.2)",
+    bottom: "rgb(214 229 244)",
+  },
+  snow: {
+    primary: "rgb(188 217 237 / 0.34)",
+    secondary: "rgb(216 234 248 / 0.24)",
+    accent: "rgb(239 246 252 / 0.2)",
+    bottom: "rgb(231 241 251)",
+  },
+  mist: {
+    primary: "rgb(170 198 224 / 0.34)",
+    secondary: "rgb(200 219 238 / 0.24)",
+    accent: "rgb(227 236 246 / 0.2)",
+    bottom: "rgb(225 237 249)",
+  },
+};
+
+const LIGHT_NIGHT_THEMES: Record<WeatherTheme, Palette> = {
+  clear: {
+    primary: "rgb(138 186 228 / 0.36)",
+    secondary: "rgb(175 206 235 / 0.26)",
+    accent: "rgb(210 227 248 / 0.2)",
+    bottom: "rgb(218 232 246)",
+  },
+  cloudy: {
+    primary: "rgb(145 178 208 / 0.34)",
+    secondary: "rgb(174 198 222 / 0.24)",
+    accent: "rgb(203 220 238 / 0.2)",
+    bottom: "rgb(214 228 242)",
+  },
+  rain: {
+    primary: "rgb(132 170 201 / 0.36)",
+    secondary: "rgb(161 192 219 / 0.25)",
+    accent: "rgb(192 213 233 / 0.2)",
+    bottom: "rgb(212 226 240)",
+  },
+  storm: {
+    primary: "rgb(123 154 188 / 0.38)",
+    secondary: "rgb(147 178 211 / 0.26)",
+    accent: "rgb(183 202 228 / 0.2)",
+    bottom: "rgb(206 221 236)",
+  },
+  snow: {
+    primary: "rgb(173 201 222 / 0.34)",
+    secondary: "rgb(201 223 239 / 0.24)",
+    accent: "rgb(229 239 248 / 0.2)",
+    bottom: "rgb(218 232 244)",
+  },
+  mist: {
+    primary: "rgb(155 185 212 / 0.34)",
+    secondary: "rgb(184 208 230 / 0.24)",
+    accent: "rgb(215 228 242 / 0.2)",
+    bottom: "rgb(215 230 244)",
+  },
+};
+
 export function AtmosphericBackdrop({ theme, isDay }: AtmosphericBackdropProps) {
-  const palette = isDay ? DAY_THEMES[theme] : NIGHT_THEMES[theme];
+  const [mode, setMode] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const updateMode = () => {
+      setMode(
+        document.documentElement.getAttribute("data-theme") === "light"
+          ? "light"
+          : "dark",
+      );
+    };
+
+    updateMode();
+
+    const observer = new MutationObserver(updateMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const paletteSet =
+    mode === "light"
+      ? isDay
+        ? LIGHT_DAY_THEMES
+        : LIGHT_NIGHT_THEMES
+      : isDay
+        ? DAY_THEMES
+        : NIGHT_THEMES;
+
+  const palette = paletteSet[theme];
 
   return (
     <div className="pointer-events-none absolute inset-0 -z-10">

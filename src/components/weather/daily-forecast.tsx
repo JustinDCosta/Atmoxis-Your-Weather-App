@@ -39,7 +39,7 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
           return (
             <article
               key={day.date}
-              className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5"
+              className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
             >
               <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3">
                 <div>
@@ -61,9 +61,9 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
               </div>
 
               <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
-                <div className="relative h-2 rounded-full bg-white/10">
+                <div className="relative h-2 rounded-full bg-line/28">
                   <div
-                    className="absolute top-0 h-2 rounded-full bg-gradient-to-r from-cyan-300/90 to-amber-200/90"
+                    className="absolute top-0 h-2 rounded-full bg-gradient-to-r from-accent/90 to-accent-soft/90"
                     style={{
                       left: `${Math.max(0, Math.min(100, left))}%`,
                       width: `${Math.max(6, Math.min(100 - left, width))}%`,
