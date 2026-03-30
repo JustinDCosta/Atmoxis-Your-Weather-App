@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  AnimatePresence,
-  motion,
-  type Variants,
-  useReducedMotion,
-} from "framer-motion";
-import { AlertCircle, MapPin, Navigation } from "lucide-react";
+import { AlertCircle, MapPin } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -42,28 +36,6 @@ const FALLBACK_LOCATION: GeocodedLocation = {
   timezone: "Asia/Singapore",
 };
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 14 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.45,
-      ease: "easeOut",
-    },
-  },
-};
-
 function formatLocation(location: GeocodedLocation): string {
   const region = location.region ? `${location.region}, ` : "";
   return `${location.name}, ${region}${location.country}`;
@@ -91,7 +63,6 @@ export function WeatherDashboard() {
   const requestRef = useRef<AbortController | null>(null);
   const hasBooted = useRef(false);
   const suppressQuerySearchRef = useRef(false);
-  const reduceMotion = useReducedMotion();
 
   const isSaved = useMemo(() => {
     if (!report) return false;
@@ -258,82 +229,80 @@ export function WeatherDashboard() {
   );
 
   const submitSearch = useCallback(async () => {
-    if (suggestions.length > 0) {
-      await selectLocation(suggestions[0]);
-      return;
-    }
+    const normalized = query.trim();
 
-    if (query.trim().length < 2) {
+    if (normalized.length < 2) {
       setError("Enter at least two characters to search for a city.");
       return;
     }
 
-    setError("No valid location selected. Choose a suggestion from the list.");
+    let candidate = suggestions[0];
+
+    if (!candidate) {
+      setIsSearching(true);
+      try {
+        const fallbackResults = await searchLocations(normalized, { count: 1 });
+        candidate = fallbackResults[0];
+      } catch {
+        setError("Search is temporarily unavailable.");
+      } finally {
+        setIsSearching(false);
+      }
+    }
+
+    if (!candidate) {
+      setError("No matching city found. Please refine your search.");
+      return;
+    }
+
+    await selectLocation(candidate);
   }, [query, selectLocation, suggestions]);
 
-  const showInsights = Boolean(report);
-
   return (
-    <div className="relative min-h-screen overflow-x-clip px-4 py-5 md:px-8 md:py-8">
+    <div className="relative min-h-screen px-4 py-5 md:px-8 md:py-8">
       <AtmosphericBackdrop
         theme={report?.current.theme ?? "cloudy"}
         isDay={report?.current.isDay ?? true}
       />
-      <div className="bg-mesh" aria-hidden />
 
-      <div className="relative mx-auto flex w-full max-w-[1240px] flex-col gap-4 md:gap-5">
+      <div className="relative mx-auto flex w-full max-w-[1040px] flex-col gap-4 md:gap-5">
         <header className="glass rounded-[var(--radius-xl)] p-4 md:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.22em] text-ink-muted">Atmoxis</p>
-              <h1 className="display-type mt-1 text-3xl font-semibold text-ink md:text-4xl">
-                Weather intelligence with a calm, cinematic interface
+              <p className="text-sm uppercase tracking-[0.2em] text-ink-muted">Atmoxis</p>
+              <h1 className="display-type mt-1 text-2xl font-semibold text-ink md:text-3xl">
+                Minimal weather, instantly readable
               </h1>
             </div>
-
-            <SearchInput
-              value={query}
-              onValueChange={setQuery}
-              onSubmit={submitSearch}
-              onUseLocation={() => void requestCurrentLocation()}
-              suggestions={suggestions}
-              onSelectSuggestion={(location) => void selectLocation(location)}
-              recentLocations={recentLocations}
-              onSelectRecent={(location) => void selectLocation(location)}
-              isSearching={isSearching}
-              emptySuggestionLabel={emptySuggestionLabel}
-            />
+            <p className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
+              <MapPin size={14} />
+              {report ? formatLocation(report.location) : "Detecting location"}
+            </p>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-            <p className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/7 px-2.5 py-1">
-              <MapPin size={13} />
-              {report ? formatLocation(report.location) : "Preparing location"}
-            </p>
-            <p className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/7 px-2.5 py-1">
-              <Navigation size={13} />
-              Geolocation: {geoState}
-            </p>
-            {isLoading && report ? (
-              <p className="inline-flex items-center gap-1.5 rounded-full border border-cyan-100/25 bg-cyan-300/14 px-2.5 py-1 text-cyan-100">
-                Updating weather...
-              </p>
-            ) : null}
-          </div>
+          <SearchInput
+            value={query}
+            onValueChange={(nextValue) => {
+              setQuery(nextValue);
+              setError(null);
+            }}
+            onSubmit={submitSearch}
+            onUseLocation={() => void requestCurrentLocation()}
+            suggestions={suggestions}
+            onSelectSuggestion={(location) => void selectLocation(location)}
+            recentLocations={recentLocations}
+            onSelectRecent={(location) => void selectLocation(location)}
+            isSearching={isSearching}
+            emptySuggestionLabel={emptySuggestionLabel}
+          />
+
+          <p className="mt-2 text-xs text-ink-muted">
+            Geolocation status: {geoState}
+            {isLoading && report ? " • refreshing weather" : ""}
+          </p>
         </header>
 
-        <AnimatePresence mode="wait">
-          {isLoading && !report ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-            >
-              <DashboardSkeleton />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+        {isLoading && !report ? <DashboardSkeleton /> : null}
 
         {error ? (
           <GlassPanel
@@ -350,67 +319,48 @@ export function WeatherDashboard() {
         ) : null}
 
         {report ? (
-          <motion.div
-            className="grid gap-4 md:gap-5"
-            variants={reduceMotion ? undefined : containerVariants}
-            initial={reduceMotion ? undefined : "hidden"}
-            animate={reduceMotion ? undefined : "show"}
-          >
-            <motion.div
-              className="grid gap-4 xl:grid-cols-[1.6fr_0.9fr]"
-              variants={reduceMotion ? undefined : cardVariants}
-            >
-              <CurrentWeatherCard
-                report={report}
-                isSaved={isSaved}
-                onToggleSave={() => toggleSavedLocation(report.location)}
-              />
+          <div className="grid gap-4 md:gap-5">
+            <CurrentWeatherCard
+              report={report}
+              isSaved={isSaved}
+              onToggleSave={() => toggleSavedLocation(report.location)}
+            />
 
-              <GlassPanel as="aside" className="h-full">
-                <SectionHeading
-                  title="Quick Insights"
-                  subtitle="Human-readable weather summary"
-                />
-                <div className="mt-4 space-y-2 text-sm text-ink-muted">
-                  <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
-                    {buildFeelsLikeSummary(report)}
-                  </p>
-                  <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
-                    {buildWindSummary(report)}
-                  </p>
-                  <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
-                    {buildRainSummary(report)}
-                  </p>
-                  <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
-                    {buildDaylightSummary(report)}
-                  </p>
-                </div>
-              </GlassPanel>
-            </motion.div>
+            <HourlyForecast hourly={report.hourly} timezone={report.location.timezone} />
 
-            <motion.div variants={reduceMotion ? undefined : cardVariants}>
-              <HourlyForecast
-                hourly={report.hourly}
-                timezone={report.location.timezone}
-              />
-            </motion.div>
-
-            <motion.div
-              className="grid gap-4 xl:grid-cols-[1.45fr_1fr]"
-              variants={reduceMotion ? undefined : cardVariants}
-            >
+            <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
               <DailyForecast daily={report.daily} timezone={report.location.timezone} />
-              <AirQualityCard airQuality={report.airQuality} />
-            </motion.div>
-          </motion.div>
+              <div className="grid gap-4">
+                <GlassPanel as="aside">
+                  <SectionHeading
+                    title="Weather Insights"
+                    subtitle="Quick plain-language summary"
+                  />
+                  <ul className="mt-3 space-y-2 text-sm text-ink-muted">
+                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                      {buildFeelsLikeSummary(report)}
+                    </li>
+                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                      {buildWindSummary(report)}
+                    </li>
+                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                      {buildRainSummary(report)}
+                    </li>
+                    <li className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5">
+                      {buildDaylightSummary(report)}
+                    </li>
+                  </ul>
+                </GlassPanel>
+
+                <AirQualityCard airQuality={report.airQuality} />
+              </div>
+            </div>
+          </div>
         ) : null}
 
-        {showInsights && savedLocations.length > 0 ? (
+        {report && savedLocations.length > 0 ? (
           <GlassPanel as="section">
-            <SectionHeading
-              title="Saved Locations"
-              subtitle="Quick switch"
-            />
+            <SectionHeading title="Saved Locations" subtitle="Quick switch" />
             <div className="mt-3 flex flex-wrap gap-2">
               {savedLocations.map((location) => (
                 <button

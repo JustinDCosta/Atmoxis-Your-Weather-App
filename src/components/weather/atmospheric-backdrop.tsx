@@ -1,7 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-
 import type { WeatherTheme } from "@/lib/weather";
 
 type AtmosphericBackdropProps = {
@@ -95,71 +93,20 @@ const NIGHT_THEMES: Record<WeatherTheme, Palette> = {
 };
 
 export function AtmosphericBackdrop({ theme, isDay }: AtmosphericBackdropProps) {
-  const reduceMotion = useReducedMotion();
   const palette = isDay ? DAY_THEMES[theme] : NIGHT_THEMES[theme];
-  const key = `${theme}-${isDay ? "day" : "night"}`;
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={key}
-        className="pointer-events-none absolute inset-0 -z-10"
-        initial={{ opacity: 0.5 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0.4 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(88% 64% at 4% 8%, ${palette.primary}, transparent 46%), radial-gradient(72% 58% at 92% 3%, ${palette.secondary}, transparent 56%), radial-gradient(98% 118% at 50% 104%, ${palette.bottom}, rgb(3 10 19) 58%)`,
-          }}
-        />
-
-        <motion.div
-          className="absolute -top-14 left-[9%] h-72 w-72 rounded-full blur-[110px]"
-          style={{ backgroundColor: palette.accent }}
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  y: [-8, 20, -8],
-                  x: [0, 16, 0],
-                }
-          }
-          transition={
-            reduceMotion
-              ? undefined
-              : {
-                  duration: 16,
-                  ease: "easeInOut",
-                  repeat: Number.POSITIVE_INFINITY,
-                }
-          }
-        />
-
-        <motion.div
-          className="absolute right-[8%] top-10 h-80 w-80 rounded-full blur-[124px]"
-          style={{ backgroundColor: palette.secondary }}
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  y: [0, 30, 0],
-                  x: [0, -22, 0],
-                }
-          }
-          transition={
-            reduceMotion
-              ? undefined
-              : {
-                  duration: 18,
-                  ease: "easeInOut",
-                  repeat: Number.POSITIVE_INFINITY,
-                }
-          }
-        />
-      </motion.div>
-    </AnimatePresence>
+    <div className="pointer-events-none absolute inset-0 -z-10">
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(88% 64% at 4% 8%, ${palette.primary}, transparent 46%), radial-gradient(72% 58% at 92% 3%, ${palette.secondary}, transparent 56%), radial-gradient(98% 118% at 50% 104%, ${palette.bottom}, rgb(3 10 19) 58%)`,
+        }}
+      />
+      <div
+        className="absolute -top-16 left-[10%] h-64 w-64 rounded-full blur-[96px]"
+        style={{ backgroundColor: palette.accent }}
+      />
+    </div>
   );
 }

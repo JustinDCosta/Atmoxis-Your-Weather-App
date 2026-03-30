@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock3, LoaderCircle, LocateFixed, Search } from "lucide-react";
-import { useState } from "react";
+import { type FocusEvent, useState } from "react";
 
 import type { GeocodedLocation } from "@/lib/weather";
 import { cn } from "@/lib/utils";
@@ -41,13 +41,17 @@ export function SearchInput({
   const showSuggestions = value.trim().length >= 2;
   const showDropdown = isFocused && (showSuggestions || showRecent);
 
+  function handleContainerBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsFocused(false);
+    }
+  }
+
   return (
     <div
       className="relative flex w-full max-w-[620px] flex-col gap-2"
       onFocus={() => setIsFocused(true)}
-      onBlur={() => {
-        window.setTimeout(() => setIsFocused(false), 90);
-      }}
+      onBlur={handleContainerBlur}
     >
       <div className="glass flex h-12 items-center gap-2 rounded-full px-3.5">
         <Search size={16} className="text-ink-muted" />
@@ -64,6 +68,13 @@ export function SearchInput({
           aria-label="Search city"
           className="h-full flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted/80 md:text-[0.95rem]"
         />
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="inline-flex h-8 items-center justify-center rounded-full border border-cyan-200/26 bg-cyan-200/14 px-3 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-200/24 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
+        >
+          Search
+        </button>
         <button
           type="button"
           onClick={onUseLocation}

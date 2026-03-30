@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Cloud,
   CloudFog,
@@ -17,10 +16,15 @@ type WeatherGlyphProps = {
   theme: WeatherTheme;
   isDay?: boolean;
   size?: number;
+  className?: string;
 };
 
-export function WeatherGlyph({ theme, isDay = true, size = 44 }: WeatherGlyphProps) {
-  const reduceMotion = useReducedMotion();
+export function WeatherGlyph({
+  theme,
+  isDay = true,
+  size = 44,
+  className,
+}: WeatherGlyphProps) {
 
   const Icon = (() => {
     if (theme === "clear") return isDay ? Sun : Moon;
@@ -32,28 +36,11 @@ export function WeatherGlyph({ theme, isDay = true, size = 44 }: WeatherGlyphPro
   })();
 
   return (
-    <motion.div
+    <div
       aria-hidden
-      animate={
-        reduceMotion
-          ? undefined
-          : {
-              y: [0, -4, 0],
-              scale: [1, 1.03, 1],
-            }
-      }
-      transition={
-        reduceMotion
-          ? undefined
-          : {
-              duration: 3.4,
-              ease: "easeInOut",
-              repeat: Number.POSITIVE_INFINITY,
-            }
-      }
-      className="inline-flex rounded-2xl border border-white/14 bg-white/8 p-3 text-cyan-100"
+      className={`inline-flex rounded-xl border border-white/14 bg-white/8 p-2 text-cyan-100 ${className ?? ""}`}
     >
       <Icon size={size} strokeWidth={1.7} />
-    </motion.div>
+    </div>
   );
 }

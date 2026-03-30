@@ -14,7 +14,6 @@ import type { HourlyForecastEntry } from "@/lib/weather";
 
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { WeatherGlyph } from "@/components/weather/weather-glyph";
 
 type HourlyForecastProps = {
   hourly: HourlyForecastEntry[];
@@ -43,7 +42,7 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
         subtitle="Next 24 hours"
       />
 
-      <div className="mt-4 h-52 w-full">
+      <div className="mt-4 h-48 w-full md:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
             <defs>
@@ -85,24 +84,24 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
               stroke="rgb(117 226 255)"
               strokeWidth={2}
               fill="url(#tempArea)"
-              animationDuration={900}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-        {hourly.map((entry) => (
+        {hourly.slice(0, 12).map((entry) => (
           <article
             key={entry.time}
-            className="min-w-[95px] rounded-2xl border border-white/12 bg-white/6 px-2.5 py-3"
+            className="min-w-[96px] rounded-xl border border-white/12 bg-white/6 px-2.5 py-2.5"
           >
             <p className="text-xs text-ink-muted">{formatHourLabel(entry.time, timezone)}</p>
-            <div className="my-2 inline-flex">
-              <WeatherGlyph theme={entry.theme} size={16} />
-            </div>
-            <p className="text-sm font-semibold text-ink">
+            <p className="mt-2 text-sm font-semibold text-ink">
               {formatTemperature(entry.temperature)}
+            </p>
+            <p className="mt-1 text-[0.72rem] text-ink-muted">
+              {entry.condition}
             </p>
             <p className="text-[0.72rem] text-ink-muted">
               {formatPercent(entry.precipitationProbability)} rain

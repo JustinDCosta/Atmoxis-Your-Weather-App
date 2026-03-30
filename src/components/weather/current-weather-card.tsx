@@ -32,16 +32,14 @@ export function CurrentWeatherCard({
 
   const metrics = [
     { label: "Feels like", value: formatTemperature(current.feelsLike) },
+    { label: "Humidity", value: formatPercent(current.humidity) },
     {
       label: "Wind",
       value: `${formatWind(current.windSpeed)} ${toCompassDirection(current.windDirection)}`,
     },
-    { label: "Humidity", value: formatPercent(current.humidity) },
     { label: "Pressure", value: formatPressure(current.pressure) },
     { label: "Visibility", value: formatVisibility(current.visibilityKm) },
     { label: "UV index", value: current.uvIndex.toFixed(1) },
-    { label: "Cloud cover", value: formatPercent(current.cloudCover) },
-    { label: "Precip", value: `${current.precipitation.toFixed(1)} mm` },
     {
       label: "Sunrise",
       value: formatShortTime(current.sunrise, report.location.timezone),
@@ -92,11 +90,11 @@ export function CurrentWeatherCard({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
           <article
             key={metric.label}
-            className="rounded-2xl border border-white/10 bg-white/6 px-3 py-2.5"
+            className="rounded-xl border border-white/10 bg-white/6 px-3 py-2.5"
           >
             <p className="text-[0.73rem] uppercase tracking-[0.14em] text-ink-muted">
               {metric.label}

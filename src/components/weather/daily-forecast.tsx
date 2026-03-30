@@ -11,7 +11,6 @@ import type { DailyForecastEntry } from "@/lib/weather";
 
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { WeatherGlyph } from "@/components/weather/weather-glyph";
 
 type DailyForecastProps = {
   daily: DailyForecastEntry[];
@@ -40,7 +39,7 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
           return (
             <article
               key={day.date}
-              className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5"
+              className="rounded-xl border border-white/11 bg-white/6 px-3 py-2.5"
             >
               <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3">
                 <div>
@@ -52,8 +51,7 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <WeatherGlyph theme={day.theme} size={14} />
+                <div className="text-right">
                   <span className="text-xs text-ink-muted">{day.condition}</span>
                 </div>
 
