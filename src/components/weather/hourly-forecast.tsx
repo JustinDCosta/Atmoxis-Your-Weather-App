@@ -69,9 +69,14 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
                 color: "rgb(237 245 255)",
                 fontSize: "12px",
               }}
-              formatter={(value: number, name: string) => {
-                if (name === "temperature") return [formatTemperature(value), "Temperature"];
-                return [formatPercent(value), "Rain chance"];
+              formatter={(value, name) => {
+                const numericValue = typeof value === "number" ? value : Number(value ?? 0);
+
+                if (String(name) === "temperature") {
+                  return [formatTemperature(numericValue), "Temperature"];
+                }
+
+                return [formatPercent(numericValue), "Rain chance"];
               }}
             />
             <Area

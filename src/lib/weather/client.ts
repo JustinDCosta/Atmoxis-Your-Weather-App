@@ -410,6 +410,34 @@ export function buildWindSummary(report: WeatherReport): string {
   return `Strong ${direction} wind near ${speed} km/h. Secure loose outdoor items.`;
 }
 
+export function buildRainSummary(report: WeatherReport): string {
+  const nextHours = report.hourly.slice(0, 6);
+  if (nextHours.length === 0) {
+    return "Short-term rain probability is currently unavailable.";
+  }
+
+  const peakChance = Math.max(
+    ...nextHours.map((entry) => entry.precipitationProbability),
+  );
+  const averagePrecipitation =
+    nextHours.reduce((sum, entry) => sum + entry.precipitation, 0) /
+    nextHours.length;
+
+  if (peakChance < 20) {
+    return "Low rain risk over the next few hours.";
+  }
+
+  if (peakChance < 50) {
+    return `There is a moderate rain chance, peaking near ${Math.round(peakChance)}%.`;
+  }
+
+  if (averagePrecipitation > 0.7) {
+    return `Rain is likely soon with peak probability around ${Math.round(peakChance)}%.`;
+  }
+
+  return `Rain chance climbs to about ${Math.round(peakChance)}% in the next hours.`;
+}
+
 export function buildDaylightSummary(report: WeatherReport): string {
   const today = report.daily[0];
   if (!today) {

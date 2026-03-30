@@ -1,12 +1,18 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  type Variants,
+  useReducedMotion,
+} from "framer-motion";
 import { AlertCircle, MapPin, Navigation } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   buildDaylightSummary,
   buildFeelsLikeSummary,
+  buildRainSummary,
   buildWindSummary,
   fetchWeatherReport,
   reverseGeocodeLocation,
@@ -14,6 +20,7 @@ import {
 } from "@/lib/weather";
 import type { GeocodedLocation, WeatherReport } from "@/lib/weather";
 
+import { AirQualityCard } from "@/components/weather/air-quality-card";
 import { AtmosphericBackdrop } from "@/components/weather/atmospheric-backdrop";
 import { CurrentWeatherCard } from "@/components/weather/current-weather-card";
 import { DailyForecast } from "@/components/weather/daily-forecast";
@@ -33,6 +40,28 @@ const FALLBACK_LOCATION: GeocodedLocation = {
   latitude: 1.2897,
   longitude: 103.8501,
   timezone: "Asia/Singapore",
+};
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: "easeOut",
+    },
+  },
 };
 
 function formatLocation(location: GeocodedLocation): string {
@@ -61,6 +90,8 @@ export function WeatherDashboard() {
 
   const requestRef = useRef<AbortController | null>(null);
   const hasBooted = useRef(false);
+  const suppressQuerySearchRef = useRef(false);
+  const reduceMotion = useReducedMotion();
 
   const isSaved = useMemo(() => {
     if (!report) return false;
@@ -173,6 +204,11 @@ export function WeatherDashboard() {
   }, [activeLocation, loadLocation, requestCurrentLocation]);
 
   useEffect(() => {
+    if (suppressQuerySearchRef.current) {
+      suppressQuerySearchRef.current = false;
+      return;
+    }
+
     if (query.trim().length < 2) {
       setSuggestions([]);
       setEmptySuggestionLabel(undefined);
@@ -213,6 +249,7 @@ export function WeatherDashboard() {
 
   const selectLocation = useCallback(
     async (location: GeocodedLocation) => {
+      suppressQuerySearchRef.current = true;
       setQuery(formatLocation(location));
       setSuggestions([]);
       await loadLocation(location);
@@ -277,6 +314,11 @@ export function WeatherDashboard() {
               <Navigation size={13} />
               Geolocation: {geoState}
             </p>
+            {isLoading && report ? (
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-cyan-100/25 bg-cyan-300/14 px-2.5 py-1 text-cyan-100">
+                Updating weather...
+              </p>
+            ) : null}
           </div>
         </header>
 
@@ -294,7 +336,12 @@ export function WeatherDashboard() {
         </AnimatePresence>
 
         {error ? (
-          <GlassPanel as="section" className="border-red-300/35 bg-red-900/22">
+          <GlassPanel
+            as="section"
+            className="border-red-300/35 bg-red-900/22"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="flex items-start gap-2 text-sm text-red-100">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <span>{error}</span>
@@ -303,8 +350,16 @@ export function WeatherDashboard() {
         ) : null}
 
         {report ? (
-          <div className="grid gap-4 md:gap-5">
-            <div className="grid gap-4 xl:grid-cols-[1.6fr_0.9fr]">
+          <motion.div
+            className="grid gap-4 md:gap-5"
+            variants={reduceMotion ? undefined : containerVariants}
+            initial={reduceMotion ? undefined : "hidden"}
+            animate={reduceMotion ? undefined : "show"}
+          >
+            <motion.div
+              className="grid gap-4 xl:grid-cols-[1.6fr_0.9fr]"
+              variants={reduceMotion ? undefined : cardVariants}
+            >
               <CurrentWeatherCard
                 report={report}
                 isSaved={isSaved}
@@ -324,18 +379,30 @@ export function WeatherDashboard() {
                     {buildWindSummary(report)}
                   </p>
                   <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
+                    {buildRainSummary(report)}
+                  </p>
+                  <p className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5">
                     {buildDaylightSummary(report)}
                   </p>
                 </div>
               </GlassPanel>
-            </div>
+            </motion.div>
 
-            <HourlyForecast
-              hourly={report.hourly}
-              timezone={report.location.timezone}
-            />
-            <DailyForecast daily={report.daily} timezone={report.location.timezone} />
-          </div>
+            <motion.div variants={reduceMotion ? undefined : cardVariants}>
+              <HourlyForecast
+                hourly={report.hourly}
+                timezone={report.location.timezone}
+              />
+            </motion.div>
+
+            <motion.div
+              className="grid gap-4 xl:grid-cols-[1.45fr_1fr]"
+              variants={reduceMotion ? undefined : cardVariants}
+            >
+              <DailyForecast daily={report.daily} timezone={report.location.timezone} />
+              <AirQualityCard airQuality={report.airQuality} />
+            </motion.div>
+          </motion.div>
         ) : null}
 
         {showInsights && savedLocations.length > 0 ? (

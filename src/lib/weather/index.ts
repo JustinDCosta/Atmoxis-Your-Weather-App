@@ -1,6 +1,7 @@
 export {
   buildDaylightSummary,
   buildFeelsLikeSummary,
+  buildRainSummary,
   buildWindSummary,
   fetchWeatherReport,
   reverseGeocodeLocation,

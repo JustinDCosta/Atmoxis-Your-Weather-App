@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock3, LoaderCircle, LocateFixed, Search } from "lucide-react";
+import { useState } from "react";
 
 import type { GeocodedLocation } from "@/lib/weather";
 import { cn } from "@/lib/utils";
@@ -35,11 +36,19 @@ export function SearchInput({
   isSearching,
   emptySuggestionLabel,
 }: SearchInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
   const showRecent = value.trim().length < 2 && recentLocations.length > 0;
   const showSuggestions = value.trim().length >= 2;
+  const showDropdown = isFocused && (showSuggestions || showRecent);
 
   return (
-    <div className="relative flex w-full max-w-[620px] flex-col gap-2">
+    <div
+      className="relative flex w-full max-w-[620px] flex-col gap-2"
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => {
+        window.setTimeout(() => setIsFocused(false), 90);
+      }}
+    >
       <div className="glass flex h-12 items-center gap-2 rounded-full px-3.5">
         <Search size={16} className="text-ink-muted" />
         <input
@@ -65,7 +74,7 @@ export function SearchInput({
         </button>
       </div>
 
-      {(showSuggestions || showRecent) ? (
+      {showDropdown ? (
         <div className="glass absolute top-[calc(100%+0.3rem)] z-20 w-full rounded-3xl p-2.5">
           {showRecent ? (
             <div>
@@ -77,6 +86,7 @@ export function SearchInput({
                   <li key={`${location.id}-recent`}>
                     <button
                       type="button"
+                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => onSelectRecent(location)}
                       className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-ink transition hover:bg-white/10"
                     >
@@ -90,7 +100,7 @@ export function SearchInput({
           ) : null}
 
           {showSuggestions ? (
-            <div className={cn(showRecent ? "mt-1 border-t border-white/12 pt-2" : "")}> 
+            <div className={cn(showRecent ? "mt-1 border-t border-white/12 pt-2" : "")}>
               <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
                 Suggestions
               </p>
@@ -105,6 +115,7 @@ export function SearchInput({
                     <li key={location.id}>
                       <button
                         type="button"
+                        onMouseDown={(event) => event.preventDefault()}
                         onClick={() => onSelectSuggestion(location)}
                         className="w-full rounded-2xl px-3 py-2 text-left text-sm text-ink transition hover:bg-white/10"
                       >
