@@ -1,47 +1,55 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { SunMoon } from "lucide-react";
+import { useEffect } from "react";
 
 type Theme = "dark" | "light";
 
-function applyTheme(theme: Theme) {
+function setTheme(theme: Theme) {
   document.documentElement.setAttribute("data-theme", theme);
   window.localStorage.setItem("atmoxis-theme", theme);
+  window.dispatchEvent(new Event("atmoxis-theme-change"));
+}
+
+function detectTheme(): Theme {
+  const attrTheme = document.documentElement.getAttribute("data-theme");
+  if (attrTheme === "light" || attrTheme === "dark") {
+    return attrTheme;
+  }
+
+  const storedTheme = window.localStorage.getItem("atmoxis-theme");
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: light)").matches
+    ? "light"
+    : "dark";
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof document === "undefined") {
-      return "dark";
-    }
-
-    return document.documentElement.getAttribute("data-theme") === "light"
-      ? "light"
-      : "dark";
-  });
-
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-  const currentLabel = theme === "dark" ? "Dark" : "Light";
+    try {
+      setTheme(detectTheme());
+    } catch {
+      // Ignore local storage or media query access failures.
+    }
+  }, []);
 
   return (
     <button
       type="button"
       onClick={() => {
-        const next = theme === "dark" ? "light" : "dark";
+        const current = detectTheme();
+        const next: Theme = current === "dark" ? "light" : "dark";
         setTheme(next);
-        applyTheme(next);
       }}
       className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line/40 bg-card-elevated/60 px-3 text-xs font-semibold text-ink transition hover:bg-card-elevated/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
-      aria-label={`Switch to ${nextTheme} mode`}
-      title={`Switch to ${nextTheme} mode`}
+      aria-label="Toggle light and dark mode"
+      title="Toggle light and dark mode"
     >
-      {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-      <span>{currentLabel}</span>
+      <SunMoon size={14} />
+      <span>Theme</span>
     </button>
   );
 }

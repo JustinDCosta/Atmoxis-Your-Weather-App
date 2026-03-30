@@ -38,7 +38,7 @@ export function WeatherGlyph({
   return (
     <div
       aria-hidden
-      className={`inline-flex rounded-xl border border-white/14 bg-white/8 p-2 text-accent ${className ?? ""}`}
+      className={`inline-flex rounded-xl border border-line/40 bg-card-elevated/65 p-2 text-accent ${className ?? ""}`}
     >
       <Icon size={size} strokeWidth={1.7} />
     </div>

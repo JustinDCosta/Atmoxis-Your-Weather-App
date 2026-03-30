@@ -325,7 +325,7 @@ export function WeatherDashboard() {
         ) : null}
 
         {report ? (
-          <div className="grid gap-4 md:gap-5">
+          <div className="grid grid-cols-1 gap-4 md:gap-5">
             <CurrentWeatherCard
               report={report}
               isSaved={isSaved}
@@ -334,9 +334,9 @@ export function WeatherDashboard() {
 
             <HourlyForecast hourly={report.hourly} timezone={report.location.timezone} />
 
-            <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
               <DailyForecast daily={report.daily} timezone={report.location.timezone} />
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <GlassPanel as="aside">
                   <SectionHeading
                     title="Weather Insights"

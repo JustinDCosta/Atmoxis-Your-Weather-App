@@ -2,11 +2,11 @@ import { GlassPanel } from "@/components/ui/glass-panel";
 
 export function DashboardSkeleton() {
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <GlassPanel className="space-y-4">
         <div className="h-5 w-44 rounded bg-line/40 shimmer" />
         <div className="h-12 w-36 rounded-xl bg-line/40 shimmer" />
-        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {Array.from({ length: 10 }).map((_, index) => (
             <div
               key={index}
