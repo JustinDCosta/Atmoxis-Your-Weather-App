@@ -567,7 +567,6 @@ export function WeatherDashboard() {
                 <motion.div
                   key={widgetId}
                   draggable
-                  layout
                   initial={{ opacity: 0, y: 12, scale: 0.992 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.34, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
