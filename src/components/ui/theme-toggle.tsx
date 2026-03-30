@@ -26,6 +26,7 @@ export function ThemeToggle() {
   }, [theme]);
 
   const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+  const currentLabel = theme === "dark" ? "Dark" : "Light";
 
   return (
     <button
@@ -40,7 +41,7 @@ export function ThemeToggle() {
       title={`Switch to ${nextTheme} mode`}
     >
       {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-      <span>{nextTheme}</span>
+      <span>{currentLabel}</span>
     </button>
   );
 }

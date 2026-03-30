@@ -13,19 +13,19 @@ type AirQualityCardProps = {
 function bandToneClass(value: NonNullable<AirQualitySnapshot["band"]>): string {
   switch (value) {
     case "good":
-      return "text-emerald-200 border-emerald-200/35 bg-emerald-300/12";
+      return "text-ink border-emerald-400/50 bg-emerald-400/15";
     case "moderate":
-      return "text-amber-100 border-amber-200/35 bg-amber-300/10";
+      return "text-ink border-amber-400/50 bg-amber-400/15";
     case "unhealthy-sensitive":
-      return "text-orange-100 border-orange-200/35 bg-orange-300/12";
+      return "text-ink border-orange-400/50 bg-orange-400/15";
     case "unhealthy":
-      return "text-rose-100 border-rose-200/35 bg-rose-300/12";
+      return "text-ink border-rose-400/50 bg-rose-400/15";
     case "very-unhealthy":
-      return "text-fuchsia-100 border-fuchsia-200/35 bg-fuchsia-300/14";
+      return "text-ink border-fuchsia-400/50 bg-fuchsia-400/15";
     case "hazardous":
-      return "text-red-100 border-red-200/35 bg-red-300/16";
+      return "text-ink border-red-400/50 bg-red-400/15";
     default:
-      return "text-ink border-white/14 bg-white/8";
+      return "text-ink border-line/40 bg-card-elevated/60";
   }
 }
 
@@ -34,7 +34,7 @@ export function AirQualityCard({ airQuality }: AirQualityCardProps) {
     return (
       <GlassPanel as="section">
         <SectionHeading title="Air Quality" subtitle="Unavailable for this location right now" />
-        <p className="mt-4 rounded-2xl border border-white/12 bg-white/6 px-3 py-2.5 text-sm text-ink-muted">
+        <p className="mt-4 rounded-2xl border border-line/35 bg-card-elevated/55 px-3 py-2.5 text-sm text-ink-muted">
           Air quality feed is temporarily unavailable. Weather data continues to update.
         </p>
       </GlassPanel>
@@ -72,7 +72,7 @@ export function AirQualityCard({ airQuality }: AirQualityCardProps) {
         {metrics.map((metric) => (
           <article
             key={metric.label}
-            className="rounded-2xl border border-white/11 bg-white/6 px-3 py-2.5"
+            className="rounded-2xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
           >
             <p className="text-[0.72rem] uppercase tracking-[0.14em] text-ink-muted">
               {metric.label}

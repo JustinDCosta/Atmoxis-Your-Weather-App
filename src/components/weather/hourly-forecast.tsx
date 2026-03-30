@@ -47,25 +47,25 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
           <AreaChart data={chartData} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="tempArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgb(117 226 255)" stopOpacity={0.66} />
-                <stop offset="100%" stopColor="rgb(117 226 255)" stopOpacity={0} />
+                <stop offset="0%" stopColor="rgb(var(--accent))" stopOpacity={0.66} />
+                <stop offset="100%" stopColor="rgb(var(--accent))" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
               dataKey="label"
-              tick={{ fill: "rgb(179 204 229)", fontSize: 11 }}
+              tick={{ fill: "rgb(var(--ink-muted))", fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               interval={2}
             />
             <YAxis hide domain={["dataMin - 2", "dataMax + 2"]} />
             <Tooltip
-              cursor={{ stroke: "rgb(117 226 255 / 0.4)", strokeWidth: 1 }}
+              cursor={{ stroke: "rgb(var(--accent) / 0.45)", strokeWidth: 1 }}
               contentStyle={{
                 borderRadius: 14,
-                border: "1px solid rgb(255 255 255 / 0.2)",
-                background: "rgb(13 34 58 / 0.95)",
-                color: "rgb(237 245 255)",
+                border: "1px solid rgb(var(--line) / 0.35)",
+                background: "rgb(var(--card) / 0.95)",
+                color: "rgb(var(--ink))",
                 fontSize: "12px",
               }}
               formatter={(value, name) => {
@@ -81,7 +81,7 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
             <Area
               dataKey="temperature"
               type="monotone"
-              stroke="rgb(117 226 255)"
+              stroke="rgb(var(--accent))"
               strokeWidth={2}
               fill="url(#tempArea)"
               isAnimationActive={false}

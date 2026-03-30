@@ -3,6 +3,7 @@
 import {
   formatDaylightDuration,
   formatMonthDay,
+  formatPrecipitation,
   formatPercent,
   formatTemperature,
   formatWeekday,
@@ -18,30 +19,28 @@ type DailyForecastProps = {
 };
 
 export function DailyForecast({ daily, timezone }: DailyForecastProps) {
-  const highs = daily.map((entry) => entry.high);
-  const lows = daily.map((entry) => entry.low);
-  const chartMin = Math.min(...lows);
-  const chartMax = Math.max(...highs);
-  const chartRange = Math.max(1, chartMax - chartMin);
-
   return (
     <GlassPanel as="section">
       <SectionHeading
         title="7-Day Forecast"
-        subtitle="Daily highs, lows, and precipitation"
+        subtitle="Understandable daily summary"
       />
 
-      <div className="mt-4 space-y-2">
-        {daily.map((day) => {
-          const left = ((day.low - chartMin) / chartRange) * 100;
-          const width = ((day.high - day.low) / chartRange) * 100;
+      <div className="mt-3 hidden grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-1 text-[0.68rem] uppercase tracking-[0.14em] text-ink-muted md:grid">
+        <p>Day</p>
+        <p>Condition</p>
+        <p className="text-right">Rain</p>
+        <p className="text-right">Temp</p>
+      </div>
 
+      <div className="mt-2 space-y-2">
+        {daily.map((day) => {
           return (
             <article
               key={day.date}
               className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
             >
-              <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3">
+              <div className="flex items-start justify-between gap-3 md:hidden">
                 <div>
                   <p className="text-sm font-semibold text-ink">
                     {formatWeekday(day.date, timezone)}
@@ -52,32 +51,50 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs text-ink-muted">{day.condition}</span>
-                </div>
-
-                <div className="text-right text-sm font-semibold text-ink">
-                  {formatTemperature(day.high)} / {formatTemperature(day.low)}
+                  <p className="text-sm font-semibold text-ink">
+                    H {formatTemperature(day.high)}
+                  </p>
+                  <p className="text-xs text-ink-muted">L {formatTemperature(day.low)}</p>
                 </div>
               </div>
 
-              <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
-                <div className="relative h-2 rounded-full bg-line/28">
-                  <div
-                    className="absolute top-0 h-2 rounded-full bg-gradient-to-r from-accent/90 to-accent-soft/90"
-                    style={{
-                      left: `${Math.max(0, Math.min(100, left))}%`,
-                      width: `${Math.max(6, Math.min(100 - left, width))}%`,
-                    }}
-                  />
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted md:hidden">
+                <span className="rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-ink">
+                  {day.condition}
+                </span>
+                <span>Rain {formatPercent(day.precipitationChance)}</span>
+                <span>Precip {formatPrecipitation(day.precipitationTotal)}</span>
+                <span>Daylight {formatDaylightDuration(day.daylightSeconds)}</span>
+              </div>
+
+              <div className="hidden grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 md:grid">
+                <div>
+                  <p className="text-sm font-semibold text-ink">
+                    {formatWeekday(day.date, timezone)}
+                  </p>
+                  <p className="text-xs text-ink-muted">
+                    {formatMonthDay(day.date, timezone)}
+                  </p>
                 </div>
 
-                <p className="text-xs text-ink-muted">
-                  Rain {formatPercent(day.precipitationChance)}
-                </p>
+                <div className="text-right">
+                  <span className="rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-xs text-ink">
+                    {day.condition}
+                  </span>
+                </div>
 
-                <p className="text-xs text-ink-muted">
-                  Daylight {formatDaylightDuration(day.daylightSeconds)}
-                </p>
+                <div className="text-right text-xs text-ink-muted">
+                  {formatPercent(day.precipitationChance)}
+                </div>
+
+                <div className="text-right text-sm font-semibold text-ink">
+                  {formatTemperature(day.low)} - {formatTemperature(day.high)}
+                </div>
+              </div>
+
+              <div className="mt-2 hidden items-center justify-between gap-3 border-t border-line/25 pt-2 text-xs text-ink-muted md:flex">
+                <p>Precipitation total: {formatPrecipitation(day.precipitationTotal)}</p>
+                <p>Daylight: {formatDaylightDuration(day.daylightSeconds)}</p>
               </div>
             </article>
           );

@@ -10,7 +10,7 @@ export function MetricPill({ label, value, className }: MetricPillProps) {
   return (
     <div
       className={cn(
-        "rounded-full border border-white/14 bg-white/8 px-3.5 py-2 text-xs text-ink-muted md:text-sm",
+        "rounded-full border border-line/40 bg-card-elevated/60 px-3.5 py-2 text-xs text-ink-muted md:text-sm",
         className,
       )}
     >

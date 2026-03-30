@@ -53,7 +53,7 @@ export function SearchInput({
       onFocus={() => setIsFocused(true)}
       onBlur={handleContainerBlur}
     >
-      <div className="glass flex min-h-12 items-center gap-2 rounded-2xl px-2.5 py-2 sm:h-12 sm:flex-nowrap sm:rounded-full sm:px-3.5 sm:py-0">
+      <div className="glass flex min-h-12 flex-wrap items-center gap-2 rounded-2xl px-2.5 py-2 sm:h-12 sm:flex-nowrap sm:rounded-full sm:px-3.5 sm:py-0">
         <Search size={16} className="shrink-0 text-ink-muted" />
         <input
           value={value}
@@ -71,14 +71,14 @@ export function SearchInput({
         <button
           type="button"
           onClick={onSubmit}
-          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/45 bg-card-elevated/70 px-3 text-xs font-semibold text-ink transition hover:bg-card-elevated/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/45 bg-card-elevated/70 px-3 text-xs font-semibold text-ink transition hover:bg-card-elevated/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Search
         </button>
         <button
           type="button"
           onClick={onUseLocation}
-          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/40 bg-card-elevated/60 px-2.5 text-xs font-semibold text-ink transition hover:bg-card-elevated/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:px-3"
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-line/40 bg-card-elevated/60 px-2.5 text-xs font-semibold text-ink transition hover:bg-card-elevated/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-3"
         >
           <LocateFixed size={14} className="sm:mr-1" />
           <span className="hidden sm:inline">Locate me</span>
@@ -111,7 +111,7 @@ export function SearchInput({
           ) : null}
 
           {showSuggestions ? (
-            <div className={cn(showRecent ? "mt-1 border-t border-white/12 pt-2" : "")}>
+            <div className={cn(showRecent ? "mt-1 border-t border-line/35 pt-2" : "")}>
               <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
                 Suggestions
               </p>

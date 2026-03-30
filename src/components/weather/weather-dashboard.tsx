@@ -260,13 +260,13 @@ export function WeatherDashboard() {
   }, [query, selectLocation, suggestions]);
 
   return (
-    <div className="relative min-h-screen overflow-x-clip px-4 py-5 md:px-8 md:py-8">
+    <div className="relative min-h-screen overflow-x-hidden py-5 md:py-8">
       <AtmosphericBackdrop
         theme={report?.current.theme ?? "cloudy"}
         isDay={report?.current.isDay ?? true}
       />
 
-      <div className="relative mx-auto flex w-full max-w-[1040px] min-w-0 flex-col gap-4 md:gap-5">
+      <div className="relative mx-auto flex w-full max-w-[1060px] min-w-0 flex-col gap-4 px-4 md:gap-5 md:px-6">
         <header className="glass rounded-[var(--radius-xl)] p-4 md:p-5">
           <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
@@ -275,8 +275,8 @@ export function WeatherDashboard() {
                 Minimal weather, instantly readable
               </h1>
             </div>
-            <div className="flex min-w-0 items-center gap-2">
-              <p className="inline-flex min-w-0 max-w-[60vw] items-center gap-1.5 truncate text-sm text-ink-muted md:max-w-[320px]">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+              <p className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate text-sm text-ink-muted md:max-w-[320px]">
                 <MapPin size={14} className="shrink-0" />
                 <span className="truncate">
                   {report ? formatLocation(report.location) : "Detecting location"}
@@ -317,7 +317,7 @@ export function WeatherDashboard() {
             role="alert"
             aria-live="polite"
           >
-            <p className="flex items-start gap-2 text-sm text-red-200">
+            <p className="flex items-start gap-2 text-sm text-danger">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </p>
