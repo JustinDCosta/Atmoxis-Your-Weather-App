@@ -9,8 +9,14 @@ import {
   YAxis,
 } from "recharts";
 
-import { formatHourLabel, formatPercent, formatTemperature } from "@/lib/weather";
-import type { HourlyForecastEntry } from "@/lib/weather";
+import {
+  formatHourLabel,
+  formatPercent,
+  formatTemperature,
+  formatWind,
+  type HourlyForecastEntry,
+  type TemperatureUnit,
+} from "@/lib/weather";
 
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -18,6 +24,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 type HourlyForecastProps = {
   hourly: HourlyForecastEntry[];
   timezone: string;
+  temperatureUnit: TemperatureUnit;
 };
 
 type HourlyPoint = {
@@ -27,7 +34,11 @@ type HourlyPoint = {
   condition: string;
 };
 
-export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
+export function HourlyForecast({
+  hourly,
+  timezone,
+  temperatureUnit,
+}: HourlyForecastProps) {
   const chartData: HourlyPoint[] = hourly.map((entry) => ({
     label: formatHourLabel(entry.time, timezone),
     temperature: Math.round(entry.temperature),
@@ -39,10 +50,10 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
     <GlassPanel as="section">
       <SectionHeading
         title="Hourly Forecast"
-        subtitle="Next 24 hours"
+        subtitle="Slide through the next 24 hours"
       />
 
-      <div className="mt-4 h-48 w-full md:h-52">
+      <div className="mt-4 h-48 w-full min-w-0 md:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
             <defs>
@@ -72,7 +83,10 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
                 const numericValue = typeof value === "number" ? value : Number(value ?? 0);
 
                 if (String(name) === "temperature") {
-                  return [formatTemperature(numericValue), "Temperature"];
+                  return [
+                    formatTemperature(numericValue, temperatureUnit),
+                    "Temperature",
+                  ];
                 }
 
                 return [formatPercent(numericValue), "Rain chance"];
@@ -90,21 +104,30 @@ export function HourlyForecast({ hourly, timezone }: HourlyForecastProps) {
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-        {hourly.slice(0, 12).map((entry) => (
+      <div
+        className="-mx-1 mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1"
+        aria-label="Hourly forecast slider"
+      >
+        {hourly.map((entry) => (
           <article
             key={entry.time}
-            className="rounded-xl border border-line/35 bg-card-elevated/55 px-2.5 py-2.5"
+            className="min-w-[148px] snap-start rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
           >
             <p className="text-xs text-ink-muted">{formatHourLabel(entry.time, timezone)}</p>
             <p className="mt-2 text-sm font-semibold text-ink">
-              {formatTemperature(entry.temperature)}
+              {formatTemperature(entry.temperature, temperatureUnit)}
             </p>
             <p className="mt-1 text-[0.72rem] text-ink-muted">
               {entry.condition}
             </p>
+            <p className="mt-1 text-[0.72rem] text-ink-muted">
+              Rain {formatPercent(entry.precipitationProbability)}
+            </p>
             <p className="text-[0.72rem] text-ink-muted">
-              {formatPercent(entry.precipitationProbability)} rain
+              Wind {formatWind(entry.windSpeed)}
+            </p>
+            <p className="text-[0.72rem] text-ink-muted">
+              UV {entry.uvIndex.toFixed(1)}
             </p>
           </article>
         ))}

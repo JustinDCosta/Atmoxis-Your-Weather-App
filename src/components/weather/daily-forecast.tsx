@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  formatDaylightDuration,
   formatMonthDay,
   formatPrecipitation,
   formatPercent,
   formatTemperature,
   formatWeekday,
+  type TemperatureUnit,
 } from "@/lib/weather";
 import type { DailyForecastEntry } from "@/lib/weather";
 
@@ -16,21 +16,26 @@ import { SectionHeading } from "@/components/ui/section-heading";
 type DailyForecastProps = {
   daily: DailyForecastEntry[];
   timezone: string;
+  temperatureUnit: TemperatureUnit;
 };
 
-export function DailyForecast({ daily, timezone }: DailyForecastProps) {
+export function DailyForecast({
+  daily,
+  timezone,
+  temperatureUnit,
+}: DailyForecastProps) {
   return (
     <GlassPanel as="section">
       <SectionHeading
         title="7-Day Forecast"
-        subtitle="Understandable daily summary"
+        subtitle="A clean view of the week ahead"
       />
 
-      <div className="mt-3 hidden grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-1 text-[0.68rem] uppercase tracking-[0.14em] text-ink-muted md:grid">
+      <div className="mt-3 hidden grid-cols-[1.2fr_1.5fr_auto_auto] items-center gap-3 px-1 text-[0.68rem] uppercase tracking-[0.14em] text-ink-muted md:grid">
         <p>Day</p>
         <p>Condition</p>
         <p className="text-right">Rain</p>
-        <p className="text-right">Temp</p>
+        <p className="text-right">Low / High</p>
       </div>
 
       <div className="mt-2 space-y-2">
@@ -52,9 +57,11 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
 
                 <div className="text-right">
                   <p className="text-sm font-semibold text-ink">
-                    H {formatTemperature(day.high)}
+                    H {formatTemperature(day.high, temperatureUnit)}
                   </p>
-                  <p className="text-xs text-ink-muted">L {formatTemperature(day.low)}</p>
+                  <p className="text-xs text-ink-muted">
+                    L {formatTemperature(day.low, temperatureUnit)}
+                  </p>
                 </div>
               </div>
 
@@ -64,10 +71,9 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
                 </span>
                 <span>Rain {formatPercent(day.precipitationChance)}</span>
                 <span>Precip {formatPrecipitation(day.precipitationTotal)}</span>
-                <span>Daylight {formatDaylightDuration(day.daylightSeconds)}</span>
               </div>
 
-              <div className="hidden grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 md:grid">
+              <div className="hidden grid-cols-[1.2fr_1.5fr_auto_auto] items-center gap-3 md:grid">
                 <div>
                   <p className="text-sm font-semibold text-ink">
                     {formatWeekday(day.date, timezone)}
@@ -78,7 +84,7 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
                 </div>
 
                 <div className="text-right">
-                  <span className="rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-xs text-ink">
+                  <span className="inline-block max-w-[220px] truncate rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-xs text-ink">
                     {day.condition}
                   </span>
                 </div>
@@ -88,13 +94,14 @@ export function DailyForecast({ daily, timezone }: DailyForecastProps) {
                 </div>
 
                 <div className="text-right text-sm font-semibold text-ink">
-                  {formatTemperature(day.low)} - {formatTemperature(day.high)}
+                  {formatTemperature(day.low, temperatureUnit)} -{" "}
+                  {formatTemperature(day.high, temperatureUnit)}
                 </div>
               </div>
 
               <div className="mt-2 hidden items-center justify-between gap-3 border-t border-line/25 pt-2 text-xs text-ink-muted md:flex">
-                <p>Precipitation total: {formatPrecipitation(day.precipitationTotal)}</p>
-                <p>Daylight: {formatDaylightDuration(day.daylightSeconds)}</p>
+                <p>Expected precipitation: {formatPrecipitation(day.precipitationTotal)}</p>
+                <p>{day.condition}</p>
               </div>
             </article>
           );

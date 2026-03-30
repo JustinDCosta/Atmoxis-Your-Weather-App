@@ -3,6 +3,7 @@ export {
   buildFeelsLikeSummary,
   buildRainSummary,
   buildWindSummary,
+  fetchApproximateLocation,
   fetchWeatherReport,
   reverseGeocodeLocation,
   searchLocations,
@@ -20,8 +21,10 @@ export {
   formatVisibility,
   formatWeekday,
   formatWind,
+  toTemperatureUnit,
   toCompassDirection,
 } from "./formatters";
+export type { TemperatureUnit } from "./formatters";
 export type {
   AirQualityBand,
   AirQualitySnapshot,

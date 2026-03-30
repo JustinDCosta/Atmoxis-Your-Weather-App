@@ -9,6 +9,7 @@ import {
   formatTemperature,
   formatVisibility,
   formatWind,
+  type TemperatureUnit,
   toCompassDirection,
 } from "@/lib/weather";
 import type { WeatherReport } from "@/lib/weather";
@@ -20,18 +21,23 @@ import { WeatherGlyph } from "@/components/weather/weather-glyph";
 type CurrentWeatherCardProps = {
   report: WeatherReport;
   isSaved: boolean;
+  temperatureUnit: TemperatureUnit;
   onToggleSave: () => void;
 };
 
 export function CurrentWeatherCard({
   report,
   isSaved,
+  temperatureUnit,
   onToggleSave,
 }: CurrentWeatherCardProps) {
   const current = report.current;
 
   const metrics = [
-    { label: "Feels like", value: formatTemperature(current.feelsLike) },
+    {
+      label: "Feels like",
+      value: formatTemperature(current.feelsLike, temperatureUnit),
+    },
     { label: "Humidity", value: formatPercent(current.humidity) },
     {
       label: "Wind",
@@ -76,7 +82,7 @@ export function CurrentWeatherCard({
           <WeatherGlyph theme={current.theme} isDay={current.isDay} size={42} />
           <div>
             <p className="display-type text-5xl font-semibold text-ink md:text-6xl">
-              {formatTemperature(current.temperature)}
+              {formatTemperature(current.temperature, temperatureUnit)}
             </p>
             <p className="mt-1 text-base text-ink-muted">{current.condition}</p>
           </div>
@@ -85,7 +91,8 @@ export function CurrentWeatherCard({
         <div className="rounded-2xl border border-line/40 bg-card-elevated/55 px-4 py-3 text-right">
           <p className="text-xs uppercase tracking-[0.18em] text-ink-muted">Today</p>
           <p className="mt-1 text-lg font-semibold text-ink">
-            H {formatTemperature(current.high)} / L {formatTemperature(current.low)}
+            H {formatTemperature(current.high, temperatureUnit)} / L{" "}
+            {formatTemperature(current.low, temperatureUnit)}
           </p>
         </div>
       </div>

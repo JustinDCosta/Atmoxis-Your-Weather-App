@@ -1,18 +1,28 @@
 "use client";
 
-import { AlertCircle, MapPin } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, GripVertical, MapPin } from "lucide-react";
+import {
+  type DragEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   buildDaylightSummary,
   buildFeelsLikeSummary,
   buildRainSummary,
   buildWindSummary,
+  fetchApproximateLocation,
   fetchWeatherReport,
   reverseGeocodeLocation,
   searchLocations,
 } from "@/lib/weather";
 import type { GeocodedLocation, WeatherReport } from "@/lib/weather";
+import { cn } from "@/lib/utils";
 
 import { AirQualityCard } from "@/components/weather/air-quality-card";
 import { AtmosphericBackdrop } from "@/components/weather/atmospheric-backdrop";
@@ -23,23 +33,54 @@ import { HourlyForecast } from "@/components/weather/hourly-forecast";
 import { SearchInput } from "@/components/weather/search-input";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { TemperatureToggle } from "@/components/ui/temperature-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useWeatherPreferences } from "@/store/use-weather-preferences";
+import {
+  type DashboardWidgetId,
+  useWeatherPreferences,
+} from "@/store/use-weather-preferences";
 
 type GeolocationState = "idle" | "active" | "granted" | "denied" | "unavailable";
 
 const FALLBACK_LOCATION: GeocodedLocation = {
-  id: "fallback-singapore",
-  name: "Singapore",
-  country: "Singapore",
-  latitude: 1.2897,
-  longitude: 103.8501,
-  timezone: "Asia/Singapore",
+  id: "fallback-le-kremlin-bicetre",
+  name: "Le Kremlin-Bicetre",
+  region: "Ile-de-France",
+  country: "France",
+  latitude: 48.8138,
+  longitude: 2.3628,
+  timezone: "Europe/Paris",
 };
+
+const BASE_WIDGET_ORDER: DashboardWidgetId[] = [
+  "hourly",
+  "daily",
+  "insights",
+  "air-quality",
+  "saved",
+];
 
 function formatLocation(location: GeocodedLocation): string {
   const region = location.region ? `${location.region}, ` : "";
   return `${location.name}, ${region}${location.country}`;
+}
+
+function reorderWidgets(
+  items: DashboardWidgetId[],
+  draggedId: DashboardWidgetId,
+  targetId: DashboardWidgetId,
+): DashboardWidgetId[] {
+  const sourceIndex = items.indexOf(draggedId);
+  const targetIndex = items.indexOf(targetId);
+
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
+    return items;
+  }
+
+  const next = [...items];
+  const [moved] = next.splice(sourceIndex, 1);
+  next.splice(targetIndex, 0, moved);
+  return next;
 }
 
 export function WeatherDashboard() {
@@ -47,9 +88,13 @@ export function WeatherDashboard() {
     activeLocation,
     recentLocations,
     savedLocations,
+    temperatureUnit,
+    widgetOrder,
     setActiveLocation,
     addRecentLocation,
     toggleSavedLocation,
+    setTemperatureUnit,
+    setWidgetOrder,
   } = useWeatherPreferences();
 
   const [query, setQuery] = useState("");
@@ -59,7 +104,14 @@ export function WeatherDashboard() {
   const [report, setReport] = useState<WeatherReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [geoState, setGeoState] = useState<GeolocationState>("idle");
+  const [locationHint, setLocationHint] = useState<string>(
+    "Allow location access for precise weather.",
+  );
   const [emptySuggestionLabel, setEmptySuggestionLabel] = useState<string>();
+  const [draggingWidgetId, setDraggingWidgetId] =
+    useState<DashboardWidgetId | null>(null);
+  const [dragOverWidgetId, setDragOverWidgetId] =
+    useState<DashboardWidgetId | null>(null);
 
   const requestRef = useRef<AbortController | null>(null);
   const hasBooted = useRef(false);
@@ -109,11 +161,18 @@ export function WeatherDashboard() {
     [addRecentLocation, setActiveLocation],
   );
 
+  const resolveFallbackLocation = useCallback(async () => {
+    const approximateLocation = await fetchApproximateLocation();
+    return approximateLocation ?? FALLBACK_LOCATION;
+  }, []);
+
   const requestCurrentLocation = useCallback(async () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGeoState("unavailable");
-      setError("Geolocation is unavailable in this browser. Showing fallback city.");
-      await loadLocation(activeLocation ?? FALLBACK_LOCATION);
+      setLocationHint("Device location is unavailable. Showing an approximate location.");
+      const fallback = await resolveFallbackLocation();
+      setQuery(formatLocation(fallback));
+      await loadLocation(fallback);
       return;
     }
 
@@ -122,6 +181,7 @@ export function WeatherDashboard() {
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         setGeoState("granted");
+        setLocationHint("Using your current location.");
 
         try {
           const reverse = await reverseGeocodeLocation(
@@ -139,28 +199,30 @@ export function WeatherDashboard() {
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
 
+          setQuery(formatLocation(nextLocation));
           await loadLocation(nextLocation);
         } catch {
-          await loadLocation({
-            ...FALLBACK_LOCATION,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            name: "Current location",
-          });
+          const fallback = await resolveFallbackLocation();
+          setQuery(formatLocation(fallback));
+          await loadLocation(fallback);
         }
       },
       async () => {
         setGeoState("denied");
-        setError("Location permission denied. Showing fallback city.");
-        await loadLocation(activeLocation ?? FALLBACK_LOCATION);
+        setLocationHint(
+          "Location permission is off. Showing an approximate location instead.",
+        );
+        const fallback = await resolveFallbackLocation();
+        setQuery(formatLocation(fallback));
+        await loadLocation(fallback);
       },
       {
-        enableHighAccuracy: false,
-        timeout: 9000,
-        maximumAge: 600000,
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 300000,
       },
     );
-  }, [activeLocation, loadLocation]);
+  }, [loadLocation, resolveFallbackLocation]);
 
   useEffect(() => {
     if (hasBooted.current) return;
@@ -211,7 +273,7 @@ export function WeatherDashboard() {
           setIsSearching(false);
         }
       }
-    }, 280);
+    }, 260);
 
     return () => {
       controller.abort();
@@ -224,6 +286,7 @@ export function WeatherDashboard() {
       suppressQuerySearchRef.current = true;
       setQuery(formatLocation(location));
       setSuggestions([]);
+      setLocationHint("Location updated.");
       await loadLocation(location);
     },
     [loadLocation],
@@ -233,7 +296,7 @@ export function WeatherDashboard() {
     const normalized = query.trim();
 
     if (normalized.length < 2) {
-      setError("Enter at least two characters to search for a city.");
+      setError("Type at least two characters to search for a city.");
       return;
     }
 
@@ -252,12 +315,114 @@ export function WeatherDashboard() {
     }
 
     if (!candidate) {
-      setError("No matching city found. Please refine your search.");
+      setError("We could not find that place. Try a nearby city name.");
       return;
     }
 
     await selectLocation(candidate);
   }, [query, selectLocation, suggestions]);
+
+  const visibleWidgetIds = useMemo(() => {
+    if (!report) return [] as DashboardWidgetId[];
+
+    return BASE_WIDGET_ORDER.filter((widgetId) => {
+      if (widgetId === "saved") {
+        return savedLocations.length > 0;
+      }
+
+      return true;
+    });
+  }, [report, savedLocations.length]);
+
+  const orderedWidgetIds = useMemo(() => {
+    const preferred = widgetOrder.filter((widgetId) =>
+      visibleWidgetIds.includes(widgetId),
+    );
+    const missing = visibleWidgetIds.filter(
+      (widgetId) => !preferred.includes(widgetId),
+    );
+
+    return [...preferred, ...missing];
+  }, [visibleWidgetIds, widgetOrder]);
+
+  const widgetContent = useMemo<Record<DashboardWidgetId, ReactNode>>(() => {
+    return {
+      hourly: report ? (
+        <HourlyForecast
+          hourly={report.hourly}
+          timezone={report.location.timezone}
+          temperatureUnit={temperatureUnit}
+        />
+      ) : null,
+      daily: report ? (
+        <DailyForecast
+          daily={report.daily}
+          timezone={report.location.timezone}
+          temperatureUnit={temperatureUnit}
+        />
+      ) : null,
+      insights: report ? (
+        <GlassPanel as="aside">
+          <SectionHeading
+            title="Weather Insights"
+            subtitle="A short human summary"
+          />
+          <ul className="mt-3 space-y-2 text-sm text-ink-muted">
+            <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
+              {buildFeelsLikeSummary(report)}
+            </li>
+            <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
+              {buildWindSummary(report)}
+            </li>
+            <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
+              {buildRainSummary(report)}
+            </li>
+            <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
+              {buildDaylightSummary(report)}
+            </li>
+          </ul>
+        </GlassPanel>
+      ) : null,
+      "air-quality": report ? <AirQualityCard airQuality={report.airQuality} /> : null,
+      saved:
+        report && savedLocations.length > 0 ? (
+          <GlassPanel as="section">
+            <SectionHeading title="Saved Locations" subtitle="Quick switch" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {savedLocations.map((location) => (
+                <button
+                  key={location.id}
+                  type="button"
+                  onClick={() => void selectLocation(location)}
+                  className="rounded-full border border-line/40 bg-card-elevated/55 px-3 py-1.5 text-sm text-ink transition hover:bg-card-elevated/75"
+                >
+                  {location.name}
+                </button>
+              ))}
+            </div>
+          </GlassPanel>
+        ) : null,
+    };
+  }, [report, savedLocations, selectLocation, temperatureUnit]);
+
+  const handleWidgetDrop = useCallback(
+    (targetWidgetId: DashboardWidgetId) => {
+      if (!draggingWidgetId) return;
+
+      const nextOrder = reorderWidgets(
+        orderedWidgetIds,
+        draggingWidgetId,
+        targetWidgetId,
+      );
+
+      setWidgetOrder(nextOrder);
+      setDraggingWidgetId(null);
+      setDragOverWidgetId(null);
+    },
+    [draggingWidgetId, orderedWidgetIds, setWidgetOrder],
+  );
+
+  const locationText = report ? formatLocation(report.location) : "Detecting location";
 
   return (
     <div className="relative min-h-screen overflow-x-hidden py-5 md:py-8">
@@ -268,20 +433,22 @@ export function WeatherDashboard() {
 
       <div className="relative mx-auto flex w-full max-w-[1060px] min-w-0 flex-col gap-4 px-4 md:gap-5 md:px-6">
         <header className="glass rounded-[var(--radius-xl)] p-4 md:p-5">
-          <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+          <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p className="text-sm uppercase tracking-[0.2em] text-ink-muted">Atmoxis</p>
               <h1 className="display-type mt-1 text-2xl font-semibold text-ink md:text-3xl">
-                Minimal weather, instantly readable
+                The Minimalist Weather App
               </h1>
             </div>
             <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
               <p className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate text-sm text-ink-muted md:max-w-[320px]">
                 <MapPin size={14} className="shrink-0" />
-                <span className="truncate">
-                  {report ? formatLocation(report.location) : "Detecting location"}
-                </span>
+                <span className="truncate">{locationText}</span>
               </p>
+              <TemperatureToggle
+                unit={temperatureUnit}
+                onChange={setTemperatureUnit}
+              />
               <ThemeToggle />
             </div>
           </div>
@@ -303,8 +470,8 @@ export function WeatherDashboard() {
           />
 
           <p className="mt-2 text-xs text-ink-muted">
-            Geolocation status: {geoState}
-            {isLoading && report ? " • refreshing weather" : ""}
+            {locationHint} {isLoading && report ? "Refreshing weather..." : ""}
+            {!isLoading && !report ? ` Location status: ${geoState}.` : ""}
           </p>
         </header>
 
@@ -329,57 +496,53 @@ export function WeatherDashboard() {
             <CurrentWeatherCard
               report={report}
               isSaved={isSaved}
+              temperatureUnit={temperatureUnit}
               onToggleSave={() => toggleSavedLocation(report.location)}
             />
 
-            <HourlyForecast hourly={report.hourly} timezone={report.location.timezone} />
-
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
-              <DailyForecast daily={report.daily} timezone={report.location.timezone} />
-              <div className="grid grid-cols-1 gap-4">
-                <GlassPanel as="aside">
-                  <SectionHeading
-                    title="Weather Insights"
-                    subtitle="Quick plain-language summary"
-                  />
-                  <ul className="mt-3 space-y-2 text-sm text-ink-muted">
-                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
-                      {buildFeelsLikeSummary(report)}
-                    </li>
-                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
-                      {buildWindSummary(report)}
-                    </li>
-                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
-                      {buildRainSummary(report)}
-                    </li>
-                    <li className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5">
-                      {buildDaylightSummary(report)}
-                    </li>
-                  </ul>
-                </GlassPanel>
-
-                <AirQualityCard airQuality={report.airQuality} />
-              </div>
+            <div className="rounded-xl border border-line/35 bg-card-elevated/45 px-3 py-2 text-xs text-ink-muted">
+              Drag cards to arrange your dashboard in the order you like.
             </div>
-          </div>
-        ) : null}
 
-        {report && savedLocations.length > 0 ? (
-          <GlassPanel as="section">
-            <SectionHeading title="Saved Locations" subtitle="Quick switch" />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {savedLocations.map((location) => (
-                <button
-                  key={location.id}
-                  type="button"
-                  onClick={() => void selectLocation(location)}
-                  className="rounded-full border border-line/40 bg-card-elevated/55 px-3 py-1.5 text-sm text-ink transition hover:bg-card-elevated/75"
+            {orderedWidgetIds.map((widgetId) => {
+              const content = widgetContent[widgetId];
+              if (!content) return null;
+
+              return (
+                <div
+                  key={widgetId}
+                  draggable
+                  onDragStart={(event: DragEvent<HTMLDivElement>) => {
+                    setDraggingWidgetId(widgetId);
+                    event.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(event: DragEvent<HTMLDivElement>) => {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "move";
+                    setDragOverWidgetId(widgetId);
+                  }}
+                  onDrop={() => handleWidgetDrop(widgetId)}
+                  onDragEnd={() => {
+                    setDraggingWidgetId(null);
+                    setDragOverWidgetId(null);
+                  }}
+                  className={cn(
+                    "rounded-[var(--radius-xl)]",
+                    dragOverWidgetId === widgetId &&
+                      draggingWidgetId !== widgetId &&
+                      "ring-2 ring-accent/35",
+                  )}
                 >
-                  {location.name}
-                </button>
-              ))}
-            </div>
-          </GlassPanel>
+                  <div className="mb-1 flex justify-end">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-line/40 bg-card-elevated/60 px-2 py-1 text-[0.68rem] uppercase tracking-[0.12em] text-ink-muted">
+                      <GripVertical size={12} /> Drag
+                    </span>
+                  </div>
+                  {content}
+                </div>
+              );
+            })}
+          </div>
         ) : null}
       </div>
     </div>

@@ -12,19 +12,17 @@ function setTheme(theme: Theme) {
 }
 
 function detectTheme(): Theme {
-  const attrTheme = document.documentElement.getAttribute("data-theme");
-  if (attrTheme === "light" || attrTheme === "dark") {
-    return attrTheme;
-  }
-
   const storedTheme = window.localStorage.getItem("atmoxis-theme");
   if (storedTheme === "light" || storedTheme === "dark") {
     return storedTheme;
   }
 
-  return window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
+  const attrTheme = document.documentElement.getAttribute("data-theme");
+  if (attrTheme === "light" || attrTheme === "dark") {
+    return attrTheme;
+  }
+
+  return "light";
 }
 
 export function ThemeToggle() {

@@ -1,48 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
-  --background: 7 18 34;
-  --ink: 244 249 255;
-  --ink-muted: 198 215 234;
-  --line: 118 154 192;
-  --line-strong: 165 208 244;
-  --card: 14 33 56;
-  --card-elevated: 22 46 74;
-  --accent: 84 205 255;
-  --accent-soft: 254 193 112;
-  --danger: 255 124 124;
-  --success: 101 229 176;
-  --shadow: 3 11 24;
-  --bg-start: 12 27 47;
-  --bg-end: 7 18 32;
-  --mesh-opacity: 0.09;
-  --radius-xl: 28px;
-  --radius-lg: 20px;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    color-scheme: light;
-    --background: 236 244 253;
-    --ink: 24 38 57;
-    --ink-muted: 88 107 133;
-    --line: 144 167 196;
-    --line-strong: 101 141 188;
-    --card: 255 255 255;
-    --card-elevated: 244 249 255;
-    --accent: 30 112 201;
-    --accent-soft: 207 137 55;
-    --danger: 196 58 58;
-    --success: 25 143 99;
-    --shadow: 56 83 116;
-    --bg-start: 248 252 255;
-    --bg-end: 223 236 250;
-    --mesh-opacity: 0.12;
-  }
-}
-
-:root[data-theme="light"] {
   color-scheme: light;
   --background: 236 244 253;
   --ink: 24 38 57;
@@ -59,6 +17,27 @@
   --bg-start: 248 252 255;
   --bg-end: 223 236 250;
   --mesh-opacity: 0.12;
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: 7 18 34;
+  --ink: 244 249 255;
+  --ink-muted: 198 215 234;
+  --line: 118 154 192;
+  --line-strong: 165 208 244;
+  --card: 14 33 56;
+  --card-elevated: 22 46 74;
+  --accent: 84 205 255;
+  --accent-soft: 254 193 112;
+  --danger: 255 124 124;
+  --success: 101 229 176;
+  --shadow: 3 11 24;
+  --bg-start: 12 27 47;
+  --bg-end: 7 18 32;
+  --mesh-opacity: 0.09;
 }
 
 @theme inline {

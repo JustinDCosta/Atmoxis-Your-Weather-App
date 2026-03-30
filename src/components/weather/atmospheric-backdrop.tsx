@@ -172,17 +172,26 @@ const LIGHT_NIGHT_THEMES: Record<WeatherTheme, Palette> = {
   },
 };
 
+function detectThemeMode(): "dark" | "light" {
+  if (typeof document === "undefined") {
+    return "light";
+  }
+
+  const storedTheme = window.localStorage.getItem("atmoxis-theme");
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return document.documentElement.getAttribute("data-theme") === "dark"
+    ? "dark"
+    : "light";
+}
+
 export function AtmosphericBackdrop({ theme, isDay }: AtmosphericBackdropProps) {
-  const [mode, setMode] = useState<"dark" | "light">("dark");
+  const [mode, setMode] = useState<"dark" | "light">(() => detectThemeMode());
 
   useEffect(() => {
-    const updateMode = () => {
-      setMode(
-        document.documentElement.getAttribute("data-theme") === "light"
-          ? "light"
-          : "dark",
-      );
-    };
+    const updateMode = () => setMode(detectThemeMode());
 
     updateMode();
 
@@ -192,7 +201,12 @@ export function AtmosphericBackdrop({ theme, isDay }: AtmosphericBackdropProps) 
       attributeFilter: ["data-theme"],
     });
 
-    return () => observer.disconnect();
+    window.addEventListener("atmoxis-theme-change", updateMode);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("atmoxis-theme-change", updateMode);
+    };
   }, []);
 
   const paletteSet =

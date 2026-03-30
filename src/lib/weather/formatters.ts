@@ -1,5 +1,7 @@
 import type { AirQualityBand } from "./types";
 
+export type TemperatureUnit = "c" | "f";
+
 const COMPASS = [
   "N",
   "NNE",
@@ -65,8 +67,20 @@ export function formatPercent(value: number): string {
   return `${Math.round(value)}%`;
 }
 
-export function formatTemperature(value: number): string {
-  return `${Math.round(value)}°`;
+export function toTemperatureUnit(valueInCelsius: number, unit: TemperatureUnit): number {
+  if (unit === "f") {
+    return (valueInCelsius * 9) / 5 + 32;
+  }
+
+  return valueInCelsius;
+}
+
+export function formatTemperature(
+  valueInCelsius: number,
+  unit: TemperatureUnit = "c",
+): string {
+  const converted = toTemperatureUnit(valueInCelsius, unit);
+  return `${Math.round(converted)}°${unit.toUpperCase()}`;
 }
 
 export function formatWind(value: number): string {

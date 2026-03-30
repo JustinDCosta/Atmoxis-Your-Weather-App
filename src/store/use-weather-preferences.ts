@@ -4,14 +4,34 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { GeocodedLocation } from "@/lib/weather";
+import type { TemperatureUnit } from "@/lib/weather";
+
+export type DashboardWidgetId =
+  | "hourly"
+  | "daily"
+  | "insights"
+  | "air-quality"
+  | "saved";
+
+const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = [
+  "hourly",
+  "daily",
+  "insights",
+  "air-quality",
+  "saved",
+];
 
 type WeatherPreferencesState = {
   activeLocation: GeocodedLocation | null;
   recentLocations: GeocodedLocation[];
   savedLocations: GeocodedLocation[];
+  temperatureUnit: TemperatureUnit;
+  widgetOrder: DashboardWidgetId[];
   setActiveLocation: (location: GeocodedLocation) => void;
   addRecentLocation: (location: GeocodedLocation) => void;
   toggleSavedLocation: (location: GeocodedLocation) => void;
+  setTemperatureUnit: (unit: TemperatureUnit) => void;
+  setWidgetOrder: (order: DashboardWidgetId[]) => void;
 };
 
 const MAX_RECENT = 6;
@@ -35,12 +55,22 @@ function dedupeLocations(
   return [next, ...withoutDuplicate].slice(0, limit);
 }
 
+function sanitizeWidgetOrder(order: DashboardWidgetId[]): DashboardWidgetId[] {
+  const filtered = order.filter((item, index) => order.indexOf(item) === index);
+  const known = DEFAULT_WIDGET_ORDER.filter((item) => filtered.includes(item));
+  const missing = DEFAULT_WIDGET_ORDER.filter((item) => !known.includes(item));
+
+  return [...known, ...missing];
+}
+
 export const useWeatherPreferences = create<WeatherPreferencesState>()(
   persist(
     (set, get) => ({
       activeLocation: null,
       recentLocations: [],
       savedLocations: [],
+      temperatureUnit: "c",
+      widgetOrder: DEFAULT_WIDGET_ORDER,
       setActiveLocation: (location) => set({ activeLocation: location }),
       addRecentLocation: (location) =>
         set({
@@ -72,6 +102,11 @@ export const useWeatherPreferences = create<WeatherPreferencesState>()(
           ),
         });
       },
+      setTemperatureUnit: (unit) => set({ temperatureUnit: unit }),
+      setWidgetOrder: (order) =>
+        set({
+          widgetOrder: sanitizeWidgetOrder(order),
+        }),
     }),
     {
       name: "atmoxis-preferences",
@@ -80,6 +115,8 @@ export const useWeatherPreferences = create<WeatherPreferencesState>()(
         activeLocation: state.activeLocation,
         recentLocations: state.recentLocations,
         savedLocations: state.savedLocations,
+        temperatureUnit: state.temperatureUnit,
+        widgetOrder: state.widgetOrder,
       }),
     },
   ),

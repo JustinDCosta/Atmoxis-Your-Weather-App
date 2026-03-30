@@ -77,10 +77,23 @@ type AirQualityApiResponse = {
   };
 };
 
+type IpWhoResponse = {
+  success?: boolean;
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: {
+    id?: string;
+  };
+};
+
 const GEO_SEARCH_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search";
 const GEO_REVERSE_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/reverse";
 const WEATHER_ENDPOINT = "https://api.open-meteo.com/v1/forecast";
 const AIR_QUALITY_ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality";
+const IP_GEO_ENDPOINT = "https://ipwho.is";
 
 type SearchLocationOptions = {
   signal?: AbortSignal;
@@ -244,6 +257,44 @@ export async function reverseGeocodeLocation(
   return first ? toLocation(first) : null;
 }
 
+export async function fetchApproximateLocation(
+  signal?: AbortSignal,
+): Promise<GeocodedLocation | null> {
+  try {
+    const payload = await fetchJson<IpWhoResponse>(IP_GEO_ENDPOINT, signal);
+
+    if (!payload.success) {
+      return null;
+    }
+
+    const latitude = payload.latitude;
+    const longitude = payload.longitude;
+
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      return null;
+    }
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return null;
+    }
+
+    const city = payload.city?.trim() || "Nearby";
+    const country = payload.country?.trim() || "Your region";
+
+    return {
+      id: `ip-${city}-${latitude}-${longitude}`,
+      name: city,
+      region: payload.region?.trim() || undefined,
+      country,
+      latitude,
+      longitude,
+      timezone: payload.timezone?.id || "auto",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchWeatherReport({
   location,
   signal,
@@ -329,7 +380,7 @@ export async function fetchWeatherReport({
       high: forecast.daily.temperature_2m_max[index] ?? 0,
       low: forecast.daily.temperature_2m_min[index] ?? 0,
       conditionCode: code,
-      condition: descriptor.shortLabel,
+      condition: descriptor.label,
       theme: descriptor.theme,
       precipitationChance: forecast.daily.precipitation_probability_max[index] ?? 0,
       precipitationTotal: forecast.daily.precipitation_sum[index] ?? 0,
@@ -381,18 +432,18 @@ export function buildFeelsLikeSummary(report: WeatherReport): string {
   const delta = report.current.feelsLike - report.current.temperature;
 
   if (Math.abs(delta) < 1.5) {
-    return "The air feels close to the actual temperature right now.";
+    return "It feels almost the same as the measured temperature.";
   }
 
   if (delta > 0) {
-    return `It feels warmer than measured due to humidity near ${Math.round(report.current.humidity)}%.`;
+    return `It feels a bit warmer because humidity is around ${Math.round(report.current.humidity)}%.`;
   }
 
   if (report.current.windSpeed > 15) {
-    return `Wind around ${Math.round(report.current.windSpeed)} km/h is making it feel cooler.`;
+    return `A ${Math.round(report.current.windSpeed)} km/h breeze is making it feel cooler.`;
   }
 
-  return "Dry air is making the temperature feel slightly cooler than reported.";
+  return "Drier air is making it feel slightly cooler than the reading.";
 }
 
 export function buildWindSummary(report: WeatherReport): string {
@@ -400,20 +451,20 @@ export function buildWindSummary(report: WeatherReport): string {
   const speed = Math.round(report.current.windSpeed);
 
   if (speed < 10) {
-    return `Light ${direction} wind at ${speed} km/h.`;
+    return `Light winds from the ${direction} at about ${speed} km/h.`;
   }
 
   if (speed < 25) {
-    return `Steady ${direction} wind around ${speed} km/h.`;
+    return `A steady ${direction} wind is blowing around ${speed} km/h.`;
   }
 
-  return `Strong ${direction} wind near ${speed} km/h. Secure loose outdoor items.`;
+  return `Strong ${direction} winds near ${speed} km/h. Keep outdoor items secure.`;
 }
 
 export function buildRainSummary(report: WeatherReport): string {
   const nextHours = report.hourly.slice(0, 6);
   if (nextHours.length === 0) {
-    return "Short-term rain probability is currently unavailable.";
+    return "Rain probability for the next few hours is unavailable right now.";
   }
 
   const peakChance = Math.max(
@@ -424,7 +475,7 @@ export function buildRainSummary(report: WeatherReport): string {
     nextHours.length;
 
   if (peakChance < 20) {
-    return "Low rain risk over the next few hours.";
+    return "Rain is unlikely in the next few hours.";
   }
 
   if (peakChance < 50) {
@@ -432,17 +483,17 @@ export function buildRainSummary(report: WeatherReport): string {
   }
 
   if (averagePrecipitation > 0.7) {
-    return `Rain is likely soon with peak probability around ${Math.round(peakChance)}%.`;
+    return `Rain is likely soon, with peak probability around ${Math.round(peakChance)}%.`;
   }
 
-  return `Rain chance climbs to about ${Math.round(peakChance)}% in the next hours.`;
+  return `Rain chances rise to about ${Math.round(peakChance)}% later today.`;
 }
 
 export function buildDaylightSummary(report: WeatherReport): string {
   const today = report.daily[0];
   if (!today) {
-    return "Daylight details are currently unavailable.";
+    return "Daylight information is unavailable right now.";
   }
 
-  return `Daylight lasts about ${formatDaylightDuration(today.daylightSeconds)} today.`;
+  return `You will get roughly ${formatDaylightDuration(today.daylightSeconds)} of daylight today.`;
 }
