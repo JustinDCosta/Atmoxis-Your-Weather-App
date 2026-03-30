@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Clock3, LoaderCircle, LocateFixed, Search } from "lucide-react";
 import { type FocusEvent, useState } from "react";
 
@@ -85,65 +86,73 @@ export function SearchInput({
         </button>
       </div>
 
-      {showDropdown ? (
-        <div className="glass absolute inset-x-0 top-[calc(100%+0.3rem)] z-20 w-auto rounded-2xl p-2.5 sm:rounded-3xl">
-          {showRecent ? (
-            <div>
-              <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
-                Recent
-              </p>
-              <ul className="space-y-1">
-                {recentLocations.map((location) => (
-                  <li key={`${location.id}-recent`}>
-                    <button
-                      type="button"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => onSelectRecent(location)}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/70"
-                    >
-                      <span className="truncate pr-2">{locationLabel(location)}</span>
-                      <Clock3 size={14} className="text-ink-muted" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {showSuggestions ? (
-            <div className={cn(showRecent ? "mt-1 border-t border-line/35 pt-2" : "")}>
-              <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
-                Suggestions
-              </p>
-              {isSearching ? (
-                <p className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted">
-                  <LoaderCircle size={14} className="animate-spin" />
-                  Searching...
+      <AnimatePresence>
+        {showDropdown ? (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.99 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute inset-x-0 top-[calc(100%+0.3rem)] z-20 w-auto rounded-2xl border border-line/45 bg-card/95 p-2.5 shadow-[0_16px_38px_rgb(var(--shadow)/0.26)] backdrop-blur-xl sm:rounded-3xl"
+          >
+            {showRecent ? (
+              <div>
+                <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                  Recent
                 </p>
-              ) : suggestions.length > 0 ? (
                 <ul className="space-y-1">
-                  {suggestions.map((location) => (
-                    <li key={location.id}>
+                  {recentLocations.map((location) => (
+                    <li key={`${location.id}-recent`}>
                       <button
                         type="button"
                         onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => onSelectSuggestion(location)}
-                        className="w-full rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/70"
+                        onClick={() => onSelectRecent(location)}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/90"
                       >
-                        <span className="block truncate">{locationLabel(location)}</span>
+                        <span className="truncate pr-2">{locationLabel(location)}</span>
+                        <Clock3 size={14} className="text-ink-muted" />
                       </button>
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="px-3 py-2 text-sm text-ink-muted">
-                  {emptySuggestionLabel ?? "No matching places found."}
+              </div>
+            ) : null}
+
+            {showSuggestions ? (
+              <div className={cn(showRecent ? "mt-1 border-t border-line/35 pt-2" : "")}>
+                <p className="px-2 pb-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                  Suggestions
                 </p>
-              )}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+                {isSearching ? (
+                  <p className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted">
+                    <LoaderCircle size={14} className="animate-spin" />
+                    Searching...
+                  </p>
+                ) : suggestions.length > 0 ? (
+                  <ul className="space-y-1">
+                    {suggestions.map((location) => (
+                      <li key={location.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => onSelectSuggestion(location)}
+                          className="w-full rounded-xl px-3 py-2 text-left text-sm text-ink transition hover:bg-card-elevated/90"
+                        >
+                          <span className="block truncate">{locationLabel(location)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : emptySuggestionLabel ? (
+                  <p className="px-3 py-2 text-sm text-ink-muted">
+                    {emptySuggestionLabel}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

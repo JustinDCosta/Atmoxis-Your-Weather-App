@@ -130,14 +130,71 @@ body {
   opacity: var(--mesh-opacity);
 }
 
+.clean-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line) / 0.5) transparent;
+}
+
+.clean-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.clean-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.clean-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--line) / 0.42),
+    rgb(var(--line-strong) / 0.5)
+  );
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
   }
 }
 
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(12px, -10px, 0) scale(1.04);
+  }
+}
+
+@keyframes drift-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-14px, 8px, 0) scale(1.06);
+  }
+}
+
+.animate-drift {
+  animation: drift 18s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift-slow 24s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer::after {
     animation: none;
+  }
+
+  .animate-drift,
+  .animate-drift-slow {
+    animation: none !important;
   }
 }

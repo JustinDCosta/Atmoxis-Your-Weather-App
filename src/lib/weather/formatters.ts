@@ -2,6 +2,15 @@ import type { AirQualityBand } from "./types";
 
 export type TemperatureUnit = "c" | "f";
 
+type ParsedIso = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  hasTime: boolean;
+};
+
 const COMPASS = [
   "N",
   "NNE",
@@ -21,6 +30,65 @@ const COMPASS = [
   "NNW",
 ] as const;
 
+function parseIso(iso: string): ParsedIso | null {
+  const trimmed = iso.trim();
+  const match = trimmed.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hasTime = match[4] !== undefined;
+  const hour = hasTime ? Number(match[4]) : 12;
+  const minute = hasTime ? Number(match[5]) : 0;
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute)
+  ) {
+    return null;
+  }
+
+  return {
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    hasTime,
+  };
+}
+
+function formatClock(hour24: number, minute: number, withMinute: boolean): string {
+  const suffix = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+
+  if (!withMinute) {
+    return `${hour12} ${suffix}`;
+  }
+
+  return `${hour12}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
+function toUtcDate(iso: string): Date | null {
+  const parsed = parseIso(iso);
+  if (!parsed) {
+    return null;
+  }
+
+  return new Date(
+    Date.UTC(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute),
+  );
+}
+
 export function toCompassDirection(degrees: number): string {
   if (!Number.isFinite(degrees)) return "N";
 
@@ -30,6 +98,11 @@ export function toCompassDirection(degrees: number): string {
 }
 
 export function formatShortTime(iso: string, timezone: string): string {
+  const parsed = parseIso(iso);
+  if (parsed?.hasTime) {
+    return formatClock(parsed.hour, parsed.minute, true);
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -38,6 +111,11 @@ export function formatShortTime(iso: string, timezone: string): string {
 }
 
 export function formatHourLabel(iso: string, timezone: string): string {
+  const parsed = parseIso(iso);
+  if (parsed?.hasTime) {
+    return formatClock(parsed.hour, parsed.minute, false);
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     timeZone: timezone,
@@ -45,6 +123,14 @@ export function formatHourLabel(iso: string, timezone: string): string {
 }
 
 export function formatWeekday(iso: string, timezone: string): string {
+  const date = toUtcDate(iso);
+  if (date) {
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      timeZone: "UTC",
+    }).format(date);
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     timeZone: timezone,
@@ -52,6 +138,15 @@ export function formatWeekday(iso: string, timezone: string): string {
 }
 
 export function formatMonthDay(iso: string, timezone: string): string {
+  const date = toUtcDate(iso);
+  if (date) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(date);
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",

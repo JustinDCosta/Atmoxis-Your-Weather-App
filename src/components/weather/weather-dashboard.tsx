@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, GripVertical, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   type DragEvent,
   type ReactNode,
@@ -63,6 +64,30 @@ const BASE_WIDGET_ORDER: DashboardWidgetId[] = [
 function formatLocation(location: GeocodedLocation): string {
   const region = location.region ? `${location.region}, ` : "";
   return `${location.name}, ${region}${location.country}`;
+}
+
+function buildSearchAttempts(query: string): string[] {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const commaChunks = trimmed
+    .split(",")
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0);
+
+  const candidates = [trimmed];
+
+  if (commaChunks.length >= 1) {
+    candidates.push(commaChunks[0]);
+  }
+
+  if (commaChunks.length >= 2) {
+    candidates.push(`${commaChunks[0]}, ${commaChunks[1]}`);
+  }
+
+  return Array.from(new Set(candidates.filter((entry) => entry.length >= 2)));
 }
 
 function reorderWidgets(
@@ -243,7 +268,18 @@ export function WeatherDashboard() {
       return;
     }
 
-    if (query.trim().length < 2) {
+    const normalizedQuery = query.trim();
+
+    if (
+      normalizedQuery.includes(",") &&
+      normalizedQuery.split(",").filter((segment) => segment.trim().length > 0).length >= 2
+    ) {
+      setSuggestions([]);
+      setEmptySuggestionLabel(undefined);
+      return;
+    }
+
+    if (normalizedQuery.length < 2) {
       setSuggestions([]);
       setEmptySuggestionLabel(undefined);
       return;
@@ -254,14 +290,16 @@ export function WeatherDashboard() {
       setIsSearching(true);
 
       try {
-        const results = await searchLocations(query, {
+        const results = await searchLocations(normalizedQuery, {
           signal: controller.signal,
           count: 8,
         });
 
         setSuggestions(results);
         setEmptySuggestionLabel(
-          results.length === 0 ? "No city found for that search." : undefined,
+          results.length === 0
+            ? "No instant match yet. Press Search for an exact lookup."
+            : undefined,
         );
       } catch {
         if (!controller.signal.aborted) {
@@ -302,11 +340,26 @@ export function WeatherDashboard() {
 
     let candidate = suggestions[0];
 
+    const exactCandidate = suggestions.find(
+      (location) => formatLocation(location).toLowerCase() === normalized.toLowerCase(),
+    );
+
+    if (exactCandidate) {
+      candidate = exactCandidate;
+    }
+
     if (!candidate) {
       setIsSearching(true);
       try {
-        const fallbackResults = await searchLocations(normalized, { count: 1 });
-        candidate = fallbackResults[0];
+        const attempts = buildSearchAttempts(normalized);
+
+        for (const attempt of attempts) {
+          const fallbackResults = await searchLocations(attempt, { count: 6 });
+          if (fallbackResults.length > 0) {
+            candidate = fallbackResults[0];
+            break;
+          }
+        }
       } catch {
         setError("Search is temporarily unavailable.");
       } finally {
@@ -315,10 +368,12 @@ export function WeatherDashboard() {
     }
 
     if (!candidate) {
+      setEmptySuggestionLabel("No reliable match yet. Try city name only, like Dhaka.");
       setError("We could not find that place. Try a nearby city name.");
       return;
     }
 
+    setEmptySuggestionLabel(undefined);
     await selectLocation(candidate);
   }, [query, selectLocation, suggestions]);
 
@@ -504,25 +559,29 @@ export function WeatherDashboard() {
               Drag cards to arrange your dashboard in the order you like.
             </div>
 
-            {orderedWidgetIds.map((widgetId) => {
+            {orderedWidgetIds.map((widgetId, index) => {
               const content = widgetContent[widgetId];
               if (!content) return null;
 
               return (
-                <div
+                <motion.div
                   key={widgetId}
                   draggable
-                  onDragStart={(event: DragEvent<HTMLDivElement>) => {
+                  layout
+                  initial={{ opacity: 0, y: 12, scale: 0.992 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.34, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                  onDragStartCapture={(event: DragEvent<HTMLDivElement>) => {
                     setDraggingWidgetId(widgetId);
                     event.dataTransfer.effectAllowed = "move";
                   }}
-                  onDragOver={(event: DragEvent<HTMLDivElement>) => {
+                  onDragOverCapture={(event: DragEvent<HTMLDivElement>) => {
                     event.preventDefault();
                     event.dataTransfer.dropEffect = "move";
                     setDragOverWidgetId(widgetId);
                   }}
-                  onDrop={() => handleWidgetDrop(widgetId)}
-                  onDragEnd={() => {
+                  onDropCapture={() => handleWidgetDrop(widgetId)}
+                  onDragEndCapture={() => {
                     setDraggingWidgetId(null);
                     setDragOverWidgetId(null);
                   }}
@@ -539,7 +598,7 @@ export function WeatherDashboard() {
                     </span>
                   </div>
                   {content}
-                </div>
+                </motion.div>
               );
             })}
           </div>

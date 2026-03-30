@@ -223,15 +223,20 @@ export function AtmosphericBackdrop({ theme, isDay }: AtmosphericBackdropProps) 
   return (
     <div className="pointer-events-none absolute inset-0 -z-10">
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-[background] duration-700"
         style={{
           background: `radial-gradient(88% 64% at 4% 8%, ${palette.primary}, transparent 46%), radial-gradient(72% 58% at 92% 3%, ${palette.secondary}, transparent 56%), radial-gradient(98% 118% at 50% 104%, ${palette.bottom}, rgb(3 10 19) 58%)`,
         }}
       />
       <div
-        className="absolute -top-16 left-[10%] h-64 w-64 rounded-full blur-[96px]"
+        className="animate-drift absolute -top-16 left-[10%] h-64 w-64 rounded-full blur-[96px]"
         style={{ backgroundColor: palette.accent }}
       />
+      <div
+        className="animate-drift-slow absolute bottom-[-7rem] right-[8%] h-72 w-72 rounded-full blur-[112px]"
+        style={{ backgroundColor: palette.secondary }}
+      />
+      <div className="bg-mesh" />
     </div>
   );
 }

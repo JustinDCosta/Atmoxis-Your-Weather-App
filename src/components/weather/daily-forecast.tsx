@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import {
   formatMonthDay,
   formatPrecipitation,
@@ -28,82 +30,85 @@ export function DailyForecast({
     <GlassPanel as="section">
       <SectionHeading
         title="7-Day Forecast"
-        subtitle="A clean view of the week ahead"
+        subtitle="A cleaner look at rain and temperature shifts"
       />
 
-      <div className="mt-3 hidden grid-cols-[1.2fr_1.5fr_auto_auto] items-center gap-3 px-1 text-[0.68rem] uppercase tracking-[0.14em] text-ink-muted md:grid">
+      <div className="mt-4 hidden grid-cols-[minmax(110px,1.05fr)_minmax(155px,1.35fr)_minmax(116px,0.88fr)_minmax(130px,0.95fr)] items-center gap-4 px-2 text-[0.67rem] uppercase tracking-[0.14em] text-ink-muted md:grid">
         <p>Day</p>
         <p>Condition</p>
-        <p className="text-right">Rain</p>
-        <p className="text-right">Low / High</p>
+        <p className="text-right">Rain / Precip</p>
+        <p className="text-right">Low / High Temp</p>
       </div>
 
-      <div className="mt-2 space-y-2">
-        {daily.map((day) => {
+      <div className="mt-3 space-y-2.5">
+        {daily.map((day, index) => {
           return (
-            <article
+            <motion.article
               key={day.date}
-              className="rounded-xl border border-line/35 bg-card-elevated/55 px-3 py-2.5"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, delay: index * 0.04 }}
+              className="rounded-2xl border border-line/35 bg-gradient-to-b from-card/96 to-card-elevated/72 px-3.5 py-3 md:px-4"
             >
-              <div className="flex items-start justify-between gap-3 md:hidden">
-                <div>
-                  <p className="text-sm font-semibold text-ink">
-                    {formatWeekday(day.date, timezone)}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    {formatMonthDay(day.date, timezone)}
-                  </p>
+              <div className="space-y-2 md:hidden">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      {formatWeekday(day.date, timezone)}
+                    </p>
+                    <p className="text-xs text-ink-muted">
+                      {formatMonthDay(day.date, timezone)}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-ink">
+                      H {formatTemperature(day.high, temperatureUnit)}
+                    </p>
+                    <p className="text-xs text-ink-muted">
+                      L {formatTemperature(day.low, temperatureUnit)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-ink">
-                    H {formatTemperature(day.high, temperatureUnit)}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    L {formatTemperature(day.low, temperatureUnit)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted md:hidden">
-                <span className="rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-ink">
-                  {day.condition}
-                </span>
-                <span>Rain {formatPercent(day.precipitationChance)}</span>
-                <span>Precip {formatPrecipitation(day.precipitationTotal)}</span>
-              </div>
-
-              <div className="hidden grid-cols-[1.2fr_1.5fr_auto_auto] items-center gap-3 md:grid">
-                <div>
-                  <p className="text-sm font-semibold text-ink">
-                    {formatWeekday(day.date, timezone)}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    {formatMonthDay(day.date, timezone)}
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <span className="inline-block max-w-[220px] truncate rounded-full border border-line/40 bg-card-elevated/65 px-2 py-1 text-xs text-ink">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+                  <span className="max-w-full truncate rounded-full border border-line/40 bg-card-elevated/75 px-2 py-1 text-ink">
                     {day.condition}
                   </span>
-                </div>
-
-                <div className="text-right text-xs text-ink-muted">
-                  {formatPercent(day.precipitationChance)}
-                </div>
-
-                <div className="text-right text-sm font-semibold text-ink">
-                  {formatTemperature(day.low, temperatureUnit)} -{" "}
-                  {formatTemperature(day.high, temperatureUnit)}
+                  <span>Rain {formatPercent(day.precipitationChance)}</span>
+                  <span>Precip {formatPrecipitation(day.precipitationTotal)}</span>
                 </div>
               </div>
 
-              <div className="mt-2 hidden items-center justify-between gap-3 border-t border-line/25 pt-2 text-xs text-ink-muted md:flex">
-                <p>Expected precipitation: {formatPrecipitation(day.precipitationTotal)}</p>
-                <p>{day.condition}</p>
+              <div className="hidden grid-cols-[minmax(110px,1.05fr)_minmax(155px,1.35fr)_minmax(116px,0.88fr)_minmax(130px,0.95fr)] items-center gap-4 md:grid">
+                <div>
+                  <p className="text-sm font-semibold text-ink">
+                    {formatWeekday(day.date, timezone)}
+                  </p>
+                  <p className="text-xs text-ink-muted">
+                    {formatMonthDay(day.date, timezone)}
+                  </p>
+                </div>
+
+                <p className="truncate text-sm text-ink" title={day.condition}>
+                  {day.condition}
+                </p>
+
+                <div className="text-right text-sm text-ink-muted">
+                  {formatPercent(day.precipitationChance)} /{" "}
+                  {formatPrecipitation(day.precipitationTotal)}
+                </div>
+
+                <div className="flex justify-end gap-1.5 text-sm font-semibold text-ink">
+                  <span className="rounded-full border border-line/40 bg-card-elevated/75 px-2 py-1">
+                    L {formatTemperature(day.low, temperatureUnit)}
+                  </span>
+                  <span className="rounded-full border border-line/40 bg-card-elevated/85 px-2 py-1">
+                    H {formatTemperature(day.high, temperatureUnit)}
+                  </span>
+                </div>
               </div>
-            </article>
+            </motion.article>
           );
         })}
       </div>
